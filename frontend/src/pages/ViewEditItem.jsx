@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { axiosInstance } from "../lib/axios";
 import { X, Save } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function ViewEditItem({ itemId, isOpen, onClose, fetchInventory }) {
   const [originalData, setOriginalData] = useState(null);
@@ -52,6 +53,7 @@ export default function ViewEditItem({ itemId, isOpen, onClose, fetchInventory }
       setIsLoading(false);
     } catch (error) {
       console.error("Error fetching inventory item:", error);
+      toast.error(response.data.message);
       onClose();
     } finally {
       setIsLoading(false);

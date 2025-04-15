@@ -7,6 +7,8 @@ import connectDB from "./config/db.js";
 import loginRouter from "./routes/login.js";
 import InventoryRouter from "./routes/inventory.js";
 import GenerateExcelReportRouter from "./routes/generateExcelReport.js";
+import InviteUser from "./routes/inviteUser.js";
+import CompleteSetup from "./routes/CompleteSetup.js";
 const app = express();
 
 // CORS configuration for frontend
@@ -24,6 +26,8 @@ app.use(cookieParser());
 app.use("/api", loginRouter);
 app.use("/inventory",InventoryRouter);
 app.use("/generate-report", GenerateExcelReportRouter);
+app.use("/send", InviteUser);
+app.use("/api/invite", CompleteSetup);
 
 connectDB();
 
