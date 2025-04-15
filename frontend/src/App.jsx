@@ -7,32 +7,33 @@ import './App.css';
 import InventoryManagement from './pages/HomePage';
 import { useAuthStore } from './store/useAuthStore';
 import { Loader } from 'lucide-react';
+import SetupPassword from './pages/SetupPassword';
 
 function App() {
-  const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+  // const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
+  // useEffect(() => {
+  //   checkAuth();
+  // }, [checkAuth]);
 
-  console.log("app se bol raha" + authUser);
+  // console.log("app se bol raha" + authUser);
 
-  if (isCheckingAuth && !authUser) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader className="size-10 animate-spin" />
-      </div>
-    );
-  }
+  // if (isCheckingAuth && !authUser) {
+  //   return (
+  //     <div className="flex items-center justify-center h-screen">
+  //       <Loader className="size-10 animate-spin" />
+  //     </div>
+  //   );
+  // }
   return (
     <div>
       <Routes>
         <Route
           path="/"
-          element={authUser ? <Navigate to="/dashboard" /> : <LoginPage />}
+          element={<LoginPage />}
         />
-
         <Route path='/signup' element={<SignUpPage />}></Route>
-        <Route path='/dashboard' element={authUser ? <InventoryManagement /> : <Navigate to="/" />}></Route>
+        <Route path='/dashboard' element={<InventoryManagement />}></Route>
+        <Route path="/setup-password/:token" element={<SetupPassword />} />
       </Routes>
 
       <Toaster />

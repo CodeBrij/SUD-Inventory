@@ -6,10 +6,17 @@ import InventoryModel from "../models/inventory.js";
 
 const InventoryRouter = express.Router();
 
+const ROLES = {
+  ADMIN: 'admin',
+  USER: 'user'
+};
+
 
 InventoryRouter.post("/add",jwtAuth, async (req, res) => {
     try {
       const userId = req.userId;
+      console.log("userId add wali" , userId);
+
       if (!userId) {
         return res.status(401).json({ message: 'Unauthorized: No token provided' });
       }
@@ -36,12 +43,7 @@ InventoryRouter.post("/add",jwtAuth, async (req, res) => {
 
 
 
-InventoryRouter.get("/getById/:id", jwtAuth, async (req, res) => {
-  const userId = req.userId;
-  if (!userId) {
-    return res.status(401).json({ message: 'Unauthorized: No token provided' });
-  }
-
+InventoryRouter.get("/getById/:id", jwtAuth(), async (req, res) => {
   try {
     const inventory = await InventoryModel.findById(req.params.id);
     if (!inventory) {
@@ -55,7 +57,7 @@ InventoryRouter.get("/getById/:id", jwtAuth, async (req, res) => {
 });
 
 
-InventoryRouter.put("/update/:id", jwtAuth, async (req, res) => {
+InventoryRouter.put("/update/:id", jwtAuth([ROLES.ADMIN]), async (req, res) => {
   const userId = req.userId;
   if (!userId) {
     return res.status(401).json({ message: 'Unauthorized: No token provided' });
@@ -86,7 +88,7 @@ InventoryRouter.put("/update/:id", jwtAuth, async (req, res) => {
 
 
 
-InventoryRouter.delete("/delete/:id",jwtAuth, async (req, res) => {
+InventoryRouter.delete("/delete/:id",jwtAuth([ROLES.ADMIN]), async (req, res) => {
   const userId = req.userId;
   if (!userId) {
     return res.status(401).json({ message: 'Unauthorized: No token provided' });
@@ -114,7 +116,7 @@ InventoryRouter.delete("/delete/:id",jwtAuth, async (req, res) => {
 
 
   
-InventoryRouter.get("/get/all",jwtAuth, async (req, res) => {
+InventoryRouter.get("/get/all",jwtAuth(), async (req, res) => {
   const userId = req.userId;
   if (!userId) {
     return res.status(401).json({ message: 'Unauthorized: No token provided' });
