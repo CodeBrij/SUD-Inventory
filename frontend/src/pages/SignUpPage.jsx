@@ -21,39 +21,67 @@ const SignUpPage = () => {
     email: "",
     password: "",
     confirmPassword: "",
+    role: "user",
   });
 
   const { signup, isSigningUp } = useAuthStore();
   const navigate = useNavigate();
 
   const validateForm = () => {
-    if (!formData.fullName.trim()) return toast.error("Full Name is required");
-    if (!formData.email.trim()) return toast.error("Email is required");
-    if (!/\S+@\S+\.\S+/.test(formData.email))
-      return toast.error("Invalid email format");
-    if (!formData.password) return toast.error("Password is required");
-    if (formData.password.length < 6)
-      return toast.error("Password must be at least 6 characters");
-    // if (formData.password !== formData.confirmPassword)
-    //   return toast.error("Passwords do not match");
-
+    if (!formData.fullName.trim()) {
+      toast.error("Full Name is required");
+      return false;
+    }
+    if (!formData.email.trim()) {
+      toast.error("Email is required");
+      return false;
+    }
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      toast.error("Invalid email format");
+      return false;
+    }
+    if (!formData.password) {
+      toast.error("Password is required");
+      return false;
+    }
+    if (formData.password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return false;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Passwords do not match");
+      return false;
+    }
     return true;
   };
 
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (validateForm()) {
-      signup(formData).then(() => {
-        setFormData({
-          fullName: "",
-          email: "",
-          password: "",
-          confirmPassword: "",
-        });
-        navigate("/dashboard");
-      });
+      try {
+        const result = await signup(formData);
+
+        if (result?.success) {
+          toast.success("Signup successful!");
+          setFormData({
+            fullName: "",
+            email: "",
+            password: "",
+            confirmPassword: "",
+            role: "user",
+          });
+          navigate("/dashboard");
+        } else {
+          toast.error(result?.message || "Signup failed. Please try again.");
+        }
+      } catch (error) {
+        toast.error(error?.message || "Something went wrong during signup.");
+      }
     }
   };
+
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
@@ -147,6 +175,23 @@ const SignUpPage = () => {
                 </button>
               </div>
             </div>
+
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-medium">Role</span>
+              </label>
+              <select
+                className="select select-bordered w-full"
+                value={formData.role}
+                onChange={(e) =>
+                  setFormData({ ...formData, role: e.target.value })
+                }
+              >
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+
 
             <div className="form-control">
               <label className="label">

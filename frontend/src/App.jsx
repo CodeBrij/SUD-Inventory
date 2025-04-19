@@ -8,6 +8,7 @@ import InventoryManagement from './pages/HomePage';
 import { useAuthStore } from './store/useAuthStore';
 import { Loader } from 'lucide-react';
 import SetupPassword from './pages/SetupPassword';
+import FileUpload from './pages/FileUpload';
 
 function App() {
   // const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
@@ -34,6 +35,8 @@ function App() {
         <Route path='/signup' element={<SignUpPage />}></Route>
         <Route path='/dashboard' element={<InventoryManagement />}></Route>
         <Route path="/setup-password/:token" element={<SetupPassword />} />
+        <Route path="/file-upload" element={<FileUpload />} />
+
       </Routes>
 
       <Toaster />

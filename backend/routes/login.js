@@ -21,6 +21,7 @@ const authSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
   confirmPassword: Joi.string().min(6).optional(),
+  role:Joi.string().optional()
 });
 
 
@@ -71,7 +72,7 @@ loginRouter.post("/signup", async (req, res) => {
     if (error) {
       return res.status(400).json({ message: error.details[0].message });
     }
-    const { fullName, email, password, confirmPassword } = req.body;
+    const { fullName, email, password, confirmPassword, role} = req.body;
     console.log(req.body);
 
     if (password !== confirmPassword) {
@@ -84,7 +85,7 @@ loginRouter.post("/signup", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = new LoginModel({ name: fullName, email, password: hashedPassword });
+    const newUser = new LoginModel({ name: fullName, email, password: hashedPassword,role });
     await newUser.save();
 
     // Generate token
