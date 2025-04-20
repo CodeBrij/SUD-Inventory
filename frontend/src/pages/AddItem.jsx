@@ -118,6 +118,8 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
       return;
     }
     try {
+      console.log("Adding inventory with data:", formData);
+      
       await axiosInstance.post(`/inventory/add`, formData);
       fetchInventory();
       onClose();

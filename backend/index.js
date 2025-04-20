@@ -9,6 +9,7 @@ import InventoryRouter from "./routes/inventory.js";
 import GenerateExcelReportRouter from "./routes/generateExcelReport.js";
 import InviteUser from "./routes/inviteUser.js";
 import CompleteSetup from "./routes/CompleteSetup.js";
+import jwtAuth from "./middleware/auth.js";
 const app = express();
 
 // CORS configuration for frontend

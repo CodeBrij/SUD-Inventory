@@ -114,17 +114,21 @@ loginRouter.post("/logout", (req, res) => {
   return res.status(200).json({ message: "Logout successful." });
 });
 
-loginRouter.get("/check", jwtAuth, async (req,res) => {
-  try {
-    console.log("TTT", req.user);
-    
-    res.status(200).json(req.user);
-  } catch (error) {
-    console.log("Error in checkAuth controller: ",error);
-    res.status(500).json({message: 
-      "Internal Server Error: ", error
-    })
+loginRouter.get("/check", (req, res) => {
+  const token = req.cookies.token;
+  console.log("token : ", token);
+  
+  if (!token) {
+    return res.status(200).json(null);
   }
-})
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log(decoded);
+    return res.status(200).json(decoded);
+  } catch (err) {
+    return res.status(200).json(null);
+  }
+});
 
 export default loginRouter;

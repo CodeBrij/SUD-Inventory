@@ -10,15 +10,18 @@ export const useAuthStore = create((set, get) => ({
   isSigningUp: false, // for loading 
   isLoggingIn: false, // for loading
   isUpdatingProfile: false, // for loading
-  isCheckingAuth: true, // for loading
+  isCheckingAuth: false, // for loading
 
   checkAuth: async () => {
+    set({ isCheckingAuth: true });
     try {
       // checks for the user is logged in or not
-      const res = await axiosInstance.get("/api/check");
+      console.log("Checking auth...");
+      
+      const res = await axiosInstance.get("api/check");
       set({ authUser: res.data }); // gets the response from backend - stores it in authUser      
     } catch (error) {
-      console.log("Error in checkAuth: ", error);
+      console.log("Error in checkAuth:", error.response?.data || error.message);
       set({ authUser: null });
     } finally {
       set({ isCheckingAuth: false });

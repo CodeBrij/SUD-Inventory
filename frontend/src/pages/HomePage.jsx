@@ -1,6 +1,15 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
-import { Trash2, Filter, Eye, Plus, Mail, View, Download } from "lucide-react";
+import {
+  Trash2,
+  Filter,
+  Eye,
+  Plus,
+  Mail,
+  View,
+  Download,
+  X,
+  UserCog,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AddItem from "./AddItem";
 import ViewEditItem from "./ViewEditItem";
@@ -21,6 +30,7 @@ export default function InventoryManagement() {
   const [deleteItemId, setDeleteItemId] = useState(null);
   const [deleteItemAppId, setDeleteItemAppId] = useState(null);
   const [isAddModalOpen, setAddModalOpen] = useState(false);
+  const [isAddUserModalOpen, setAddUserModalOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [inventory, setInventory] = useState([]);
   const [selectedColumns, setSelectedColumns] = useState({
@@ -55,6 +65,8 @@ export default function InventoryManagement() {
     try {
       const response = await axiosInstance.get("/inventory/get/all");
       setInventory(response.data.data);
+      console.log("Fetched inventory:", response.data.data);
+      
     } catch (error) {
       console.error("Error fetching inventory:", error);
     }
@@ -65,9 +77,9 @@ export default function InventoryManagement() {
   }, []);
 
   const getVisibleColumnsData = (items) => {
-    return items.map(item => {
+    return items.map((item) => {
       const visibleItem = {};
-      Object.keys(selectedColumns).forEach(column => {
+      Object.keys(selectedColumns).forEach((column) => {
         if (selectedColumns[column]) {
           visibleItem[column] = item[column];
         }
@@ -78,27 +90,29 @@ export default function InventoryManagement() {
 
   const handleDownload = () => {
     const visibleData = getVisibleColumnsData(filteredInventory);
-    
+
     // Convert to CSV
     const headers = Object.keys(visibleData[0] || {});
     const csvRows = [
-      headers.join(','),
-      ...visibleData.map(row => 
-        headers.map(fieldName => 
-          JSON.stringify(row[fieldName] || '', (key, value) => 
-            value === null ? '' : value
+      headers.join(","),
+      ...visibleData.map((row) =>
+        headers
+          .map((fieldName) =>
+            JSON.stringify(row[fieldName] || "", (key, value) =>
+              value === null ? "" : value
+            )
           )
-        ).join(',')
-      )
-    ].join('\n');
+          .join(",")
+      ),
+    ].join("\n");
 
     // Create download link
-    const blob = new Blob([csvRows], { type: 'text/csv' });
+    const blob = new Blob([csvRows], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.setAttribute('hidden', '');
-    a.setAttribute('href', url);
-    a.setAttribute('download', 'inventory_data.csv');
+    const a = document.createElement("a");
+    a.setAttribute("hidden", "");
+    a.setAttribute("href", url);
+    a.setAttribute("download", "inventory_data.csv");
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -145,58 +159,66 @@ export default function InventoryManagement() {
     try {
       // Generate CSV data
       const visibleData = getVisibleColumnsData(filteredInventory);
-      
+      console.log("Visible Data:", visibleData);
+
       // Check if there's any data to send
       if (visibleData.length === 0) {
         toast.error("No data to send");
         return;
       }
-  
+
       const headers = Object.keys(visibleData[0]);
       const csvContent = [
-        headers.join(','),
-      ...visibleData.map(row => 
-        headers.map(fieldName => 
-          JSON.stringify(row[fieldName] || '', (key, value) => 
-            value === null ? '' : value
-          )
-        ).join(',')
-      )
-      ].join('\n');
-  
+        headers.join(","),
+        ...visibleData.map((row) =>
+          headers
+            .map((fieldName) =>
+              JSON.stringify(row[fieldName] || "", (key, value) =>
+                value === null ? "" : value
+              )
+            )
+            .join(",")
+        ),
+      ].join("\n");
+
       // Create FormData
       const formData = new FormData();
-      formData.append('mail', receiverMail);
-      formData.append('message', message);
-      
+      formData.append("mail", receiverMail);
+      formData.append("message", message);
+
       // Add BOM for UTF-8 and create blob
-      const blob = new Blob(["\uFEFF" + csvContent], { 
-        type: 'text/csv;charset=utf-8;' 
+      const blob = new Blob(["\uFEFF" + csvContent], {
+        type: "text/csv;charset=utf-8;",
       });
-      formData.append('file', blob, 'inventory_report.csv');
-  
+      formData.append("file", blob, "inventory_report.csv");
+
       // Send request - let browser set Content-Type automatically
       const res = await axiosInstance.post(
         "/generate-report/send-report",
         formData,
         {
-          withCredentials: true
+          withCredentials: true,
         }
       );
-  
+
       toast.success("Mail sent successfully");
       setIsSendEmailModalOpen(false);
       setReceiverMail("");
       setMessage("");
     } catch (error) {
       console.error("Error sending email:", error);
-      const errorMessage = error.response?.data?.message || 
-                          error.message || 
-                          "Failed to send email";
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to send email";
       toast.error(errorMessage);
     } finally {
       setIsSendingMail(false);
     }
+  };
+
+  const AddUser = () => {
+    navigate("/add-user");
   };
 
   const handleLogout = async () => {
@@ -259,7 +281,7 @@ export default function InventoryManagement() {
           ✕
         </button>
 
-        <h3 className="text-lg font-semibold">Filters</h3>
+        <h3 className="text-lg font-semibold"> Filters</h3>
         <div className="space-y-2">
           <select
             name="severity"
@@ -430,7 +452,7 @@ export default function InventoryManagement() {
         </button>
         <button
           onClick={handleLogout}
-          className="btn btn-outline w-full mt-0 hover:bg-red-500"
+          className="btn btn-outline w-full mt-0 hover:bg-red-600 hover:text-white"
         >
           Logout
         </button>
@@ -438,9 +460,17 @@ export default function InventoryManagement() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col p-6 md:ml-64 h-screen overflow-hidden">
-        <h1 className="text-xl font-bold mb-5">
-          SUD Software Inventory Manager
-        </h1>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-xl font-bold mb-5">
+            SUD Software Inventory Manager
+          </h1>
+          <button
+            onClick={AddUser}
+            className="btn btn-primary !flex !items-center !gap-2"
+          >
+            <UserCog size={18} />
+          </button>
+        </div>
         <button
           onClick={() => setSidebarOpen(true)}
           className="btn btn-primary mb-4 md:hidden"
@@ -463,18 +493,18 @@ export default function InventoryManagement() {
               className="btn btn-primary !flex !items-center !gap-2"
             >
               <Plus size={18} />
-              <span className="hidden sm:block">Add Item</span>
+              <span className="hidden lg:block">Add Item</span>
             </button>
             <button onClick={handleDownload} className="btn btn-primary">
               <Download size={18} />{" "}
-              <span className="hidden sm:inline">Download</span>
+              <span className="hidden lg:inline">Download</span>
             </button>
             <button
               className="btn btn-primary !flex !items-center !gap-2"
               onClick={() => setShowColumnDropdown(!showColumnDropdown)}
             >
               <View size={18} className="ml-1" />
-              <span className="hidden sm:inline">Edit View</span>
+              <span className="hidden lg:inline">Edit View</span>
             </button>
             {showColumnDropdown && (
               <div
@@ -503,7 +533,7 @@ export default function InventoryManagement() {
             )}
             <button onClick={handleMail} className="btn btn-primary">
               <Mail size={18} />{" "}
-              <span className="hidden sm:inline">Send Mail</span>
+              <span className="hidden lg:inline">Send Mail</span>
             </button>
           </div>
         </div>
@@ -670,9 +700,17 @@ export default function InventoryManagement() {
       )}
 
       {isSendEmailModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div className="fixed inset-0 bg-base-100 bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h2 className="text-xl font-bold mb-3 text-center">Send Email</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold mb-3 text-center">Send Email</h2>
+              <button
+                onClick={() => setIsSendEmailModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={24} />
+              </button>
+            </div>
             <div className="form-control mb-5">
               <label className="label mb-2">
                 <span className="label-text">Receiver's Email</span>
