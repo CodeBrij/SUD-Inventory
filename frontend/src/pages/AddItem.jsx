@@ -84,6 +84,7 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
       if (name === "deployment") {
         updatedData = {
           ...updatedData,
+          deployment: value,
           cloudProvider: value === "Cloud" ? "" : undefined,
         };
       }
@@ -91,6 +92,7 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
       return updatedData;
     });
   };
+
 
 
   const handleTechStackAdd = () => {
@@ -119,7 +121,7 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
     }
     try {
       console.log("Adding inventory with data:", formData);
-      
+
       await axiosInstance.post(`/inventory/add`, formData);
       fetchInventory();
       onClose();

@@ -32,11 +32,13 @@ const inventorySchema = new mongoose.Schema({
   },
   cloudProvider: {
     type: String,
-    enum: ['Azure', 'AWS', 'GCP'],
+    enum: ['AWS', 'Azure', 'Google Cloud', ''], 
+    default: null ,
     required: function () {
       return this.deployment === 'Cloud';
     },
   },
+  
   stage: {
     type: String,
     enum: ['Live', 'Preprod', 'Sunset', 'Decom'],
