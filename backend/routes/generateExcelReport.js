@@ -9,7 +9,7 @@ import sendEmailWithAttachment from "../middleware/sendEmailWithAttachment.js";
 const GenerateExcelReportRouter = express.Router();
 const upload = multer({ dest: "uploads/" }); // Temporary storage
 
-GenerateExcelReportRouter.post("/send-report", jwtAuth, upload.single('file'), async (req, res) => {
+GenerateExcelReportRouter.post("/send-report", jwtAuth(), upload.single('file'), async (req, res) => {
     const userId = req.userId;
 
     if (!userId) {

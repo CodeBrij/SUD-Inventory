@@ -16,7 +16,7 @@ function App() {
     checkAuth();
   }, []);
 
-  console.log("app se bol raha" + authUser);
+  console.log("Authentication User" + authUser);
 
   if (isCheckingAuth === true) {
     // If checking auth is in progress, show a loader
@@ -29,9 +29,9 @@ function App() {
   return (
     <div>
       <Routes>
-        <Route path='/' element={!authUser? <LoginPage />: <Navigate to="/dashboard"/>}></Route>
-        <Route path='/signup' element={!authUser? <SignUpPage />: <Navigate to="/dashboard"/>}></Route>
-        <Route path='/dashboard' element={authUser? <InventoryManagement /> : <Navigate to="/"/>}></Route>
+        <Route path='/' element={!authUser ? <LoginPage /> : <Navigate to="/dashboard" />}></Route>
+        <Route path='/signup' element={!authUser ? <SignUpPage /> : <Navigate to="/dashboard" />}></Route>
+        <Route path='/dashboard' element={authUser ? <InventoryManagement /> : <Navigate to="/" />}></Route>
         <Route path="/setup-password/:token" element={<SetupPassword />} />
         <Route path="/add-user" element={<AddUsers />} />
 

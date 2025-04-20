@@ -12,7 +12,7 @@ const ROLES = {
 };
 
 
-InventoryRouter.post("/add",jwtAuth, async (req, res) => {
+InventoryRouter.post("/add",jwtAuth(), async (req, res) => {
     try {
       const userId = req.userId;
       console.log("userId add wali" , userId);
@@ -25,6 +25,7 @@ InventoryRouter.post("/add",jwtAuth, async (req, res) => {
       if (!appId) {
         return res.status(400).json({ message: 'Application ID is required' });
       }
+      console.log("request : " ,  req.body);
 
       const existingInventory = await InventoryModel.findOne({ appId });
       if (existingInventory) {

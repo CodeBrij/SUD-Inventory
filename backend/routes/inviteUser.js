@@ -87,7 +87,15 @@ InviteUser.post("/send-setup-links", upload.single("file"), async (req, res) => 
         console.error("❌ Error parsing JSON users:", err);
         return res.status(400).json({ message: "Invalid user data format." });
       }
+    }else if (req.body.email && req.body.name) {
+      users = [{
+        email: req.body.email,
+        name: req.body.name,
+        role: req.body.role || "user"
+      }];
+      console.log("👤 Processing individual user:", users[0]);
     }
+
 
     if (!users || users.length === 0) {
       return res.status(400).json({ message: "No user data provided." });
