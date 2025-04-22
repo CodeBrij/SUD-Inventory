@@ -33,6 +33,7 @@ export default function InventoryManagement() {
   const [isAddUserModalOpen, setAddUserModalOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [inventory, setInventory] = useState([]);
+  const [subject, setSubject] = useState('');
   const [selectedColumns, setSelectedColumns] = useState({
     appId: true,
     applicationName: true,
@@ -69,7 +70,7 @@ export default function InventoryManagement() {
       const response = await axiosInstance.get("/inventory/get/all");
       setInventory(response.data.data);
       console.log("Fetched inventory:", response.data.data);
-      
+
     } catch (error) {
       console.error("Error fetching inventory:", error);
     }
@@ -90,22 +91,30 @@ export default function InventoryManagement() {
       return visibleItem;
     });
   };
-
   const handleDownload = () => {
     const visibleData = getVisibleColumnsData(filteredInventory);
 
-    // Convert to CSV
+    // Extract column headers
     const headers = Object.keys(visibleData[0] || {});
+
     const csvRows = [
-      headers.join(","),
+      headers.join(" , "), // Adds space between column headers
       ...visibleData.map((row) =>
         headers
-          .map((fieldName) =>
-            JSON.stringify(row[fieldName] || "", (key, value) =>
-              value === null ? "" : value
-            )
-          )
-          .join(",")
+          .map((fieldName) => {
+            let value = row[fieldName] || "";
+
+            // If the value is a JSON-like object (for example, 'technologyStack' or 'urls')
+            if (typeof value === "object") {
+              value = JSON.stringify(value)
+                .replace(/,/g, ";") // Replace commas in JSON with semicolons to avoid breaking CSV format
+                .replace(/"/g, ""); // Optionally remove quotes for better readability
+            }
+
+            // Handle empty strings or null values
+            return value;
+          })
+          .join(" , ") // Adds space between row columns
       ),
     ].join("\n");
 
@@ -120,6 +129,7 @@ export default function InventoryManagement() {
     a.click();
     document.body.removeChild(a);
   };
+
 
   const handleView = (item) => {
     setCurrentViewItemId(item._id);
@@ -157,68 +167,95 @@ export default function InventoryManagement() {
     setIsSendEmailModalOpen(true);
   };
 
+  // const handleMailSend = async () => {
+  //   setIsSendingMail(true);
+  //   try {
+  //     // Generate CSV data
+  //     const visibleData = getVisibleColumnsData(filteredInventory);
+  //     console.log("Visible Data:", visibleData);
+
+  //     // Check if there's any data to send
+  //     if (visibleData.length === 0) {
+  //       toast.error("No data to send");
+  //       return;
+  //     }
+
+  //     const headers = Object.keys(visibleData[0]);
+  //     const csvContent = [
+  //       headers.join(","),
+  //       ...visibleData.map((row) =>
+  //         headers
+  //           .map((fieldName) =>
+  //             JSON.stringify(row[fieldName] || "", (key, value) =>
+  //               value === null ? "" : value
+  //             )
+  //           )
+  //           .join(",")
+  //       ),
+  //     ].join("\n");
+
+  //     // Create FormData
+  //     const formData = new FormData();
+  //     formData.append("mail", receiverMail);
+  //     formData.append("message", message);
+
+  //     // Add BOM for UTF-8 and create blob
+  //     const blob = new Blob(["\uFEFF" + csvContent], {
+  //       type: "text/csv;charset=utf-8;",
+  //     });
+  //     formData.append("file", blob, "inventory_report.csv");
+
+  //     // Send request - let browser set Content-Type automatically
+  //     const res = await axiosInstance.post(
+  //       "/generate-report/send-report",
+  //       formData,
+  //       {
+  //         withCredentials: true,
+  //       }
+  //     );
+
+  //     toast.success("Mail sent successfully");
+  //     setIsSendEmailModalOpen(false);
+  //     setReceiverMail("");
+  //     setMessage("");
+  //   } catch (error) {
+  //     console.error("Error sending email:", error);
+  //     const errorMessage =
+  //       error.response?.data?.message ||
+  //       error.message ||
+  //       "Failed to send email";
+  //     toast.error(errorMessage);
+  //   } finally {
+  //     setIsSendingMail(false);
+  //   }
+  // };
+
   const handleMailSend = async () => {
     setIsSendingMail(true);
+    const visibleData = getVisibleColumnsData(filteredInventory);
     try {
-      // Generate CSV data
-      const visibleData = getVisibleColumnsData(filteredInventory);
-      console.log("Visible Data:", visibleData);
-
-      // Check if there's any data to send
-      if (visibleData.length === 0) {
-        toast.error("No data to send");
-        return;
-      }
-
-      const headers = Object.keys(visibleData[0]);
-      const csvContent = [
-        headers.join(","),
-        ...visibleData.map((row) =>
-          headers
-            .map((fieldName) =>
-              JSON.stringify(row[fieldName] || "", (key, value) =>
-                value === null ? "" : value
-              )
-            )
-            .join(",")
-        ),
-      ].join("\n");
-
-      // Create FormData
-      const formData = new FormData();
-      formData.append("mail", receiverMail);
-      formData.append("message", message);
-
-      // Add BOM for UTF-8 and create blob
-      const blob = new Blob(["\uFEFF" + csvContent], {
-        type: "text/csv;charset=utf-8;",
+      const dataToSend = {
+        mail: receiverMail,
+        message: message,
+        itemDetails: visibleData,
+      };
+      console.log(visibleData);
+      const res = await axiosInstance.post("/generate-report/send-report", dataToSend, {
+        withCredentials: true,
       });
-      formData.append("file", blob, "inventory_report.csv");
-
-      // Send request - let browser set Content-Type automatically
-      const res = await axiosInstance.post(
-        "/generate-report/send-report",
-        formData,
-        {
-          withCredentials: true,
-        }
-      );
-
       toast.success("Mail sent successfully");
       setIsSendEmailModalOpen(false);
       setReceiverMail("");
       setMessage("");
+      setSubject("");
     } catch (error) {
-      console.error("Error sending email:", error);
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to send email";
-      toast.error(errorMessage);
+      console.log("Error in signup: ", error);
+      toast.error(error.response.data.message);
     } finally {
       setIsSendingMail(false);
     }
-  };
+  }
+
 
   const AddUser = () => {
     navigate("/add-user");
@@ -244,38 +281,37 @@ export default function InventoryManagement() {
 
   const filteredInventory = Array.isArray(inventory)
     ? inventory.filter(
-        (item) =>
-          (!filters.severity || item.severity === filters.severity) &&
-          (!filters.deployment || item.deployment === filters.deployment) &&
-          (!filters.stage || item.stage === filters.stage) &&
-          (!filters.publish || item.publish === filters.publish) &&
-          (!filters.applicationType ||
-            item.applicationType === filters.applicationType) &&
-          (!filters.developedBy || item.developedBy === filters.developedBy) &&
-          (!filters.cloudProvider ||
-            item.cloudProvider === filters.cloudProvider) &&
-          (!filters.manager || item.manager === filters.manager) &&
-          (!filters.vaptStatus || item.vaptStatus === filters.vaptStatus) &&
-          (!filters.endpointSecurity ||
-            item.endpointSecurity === filters.endpointSecurity) &&
-          (!filters.accessControl ||
-            item.accessControl === filters.accessControl) &&
-          (!filters.socMonitoring ||
-            item.socMonitoring === (filters.socMonitoring === "true")) &&
-          (!filters.smtpEnabled ||
-            item.smtpEnabled === (filters.smtpEnabled === "true")) &&
-          (!search ||
-            item.applicationName.toLowerCase().includes(search.toLowerCase()))
-      )
+      (item) =>
+        (!filters.severity || item.severity === filters.severity) &&
+        (!filters.deployment || item.deployment === filters.deployment) &&
+        (!filters.stage || item.stage === filters.stage) &&
+        (!filters.publish || item.publish === filters.publish) &&
+        (!filters.applicationType ||
+          item.applicationType === filters.applicationType) &&
+        (!filters.developedBy || item.developedBy === filters.developedBy) &&
+        (!filters.cloudProvider ||
+          item.cloudProvider === filters.cloudProvider) &&
+        (!filters.manager || item.manager === filters.manager) &&
+        (!filters.vaptStatus || item.vaptStatus === filters.vaptStatus) &&
+        (!filters.endpointSecurity ||
+          item.endpointSecurity === filters.endpointSecurity) &&
+        (!filters.accessControl ||
+          item.accessControl === filters.accessControl) &&
+        (!filters.socMonitoring ||
+          item.socMonitoring === (filters.socMonitoring === "true")) &&
+        (!filters.smtpEnabled ||
+          item.smtpEnabled === (filters.smtpEnabled === "true")) &&
+        (!search ||
+          item.applicationName.toLowerCase().includes(search.toLowerCase()))
+    )
     : [];
 
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 bg-white shadow-lg w-64 p-4 space-y-4 transform ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0 transition-transform duration-300 overflow-y-auto`}
+        className={`fixed inset-y-0 left-0 z-50 bg-white shadow-lg w-64 p-4 space-y-4 transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } md:translate-x-0 transition-transform duration-300 overflow-y-auto`}
       >
         <button
           onClick={() => setSidebarOpen(false)}
@@ -543,7 +579,7 @@ export default function InventoryManagement() {
 
         {/* Scrollable table section */}
         <div className="flex-1 overflow-auto">
-        <table className="table w-full">
+          <table className="table w-full">
             <thead className="sticky top-0 bg-white">
               <tr className="bg-gray-100 text-sm md:text-base">
                 {selectedColumns.appId && <th>App ID</th>}
@@ -739,65 +775,89 @@ export default function InventoryManagement() {
       )}
 
       {isSendEmailModalOpen && (
-        <div className="fixed inset-0 bg-base-100 bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold mb-3 text-center">Send Email</h2>
+        <div className="fixed inset-0 bg-white bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-[450px]">
+            <div className="flex justify-between items-center mb-6 border-b pb-3">
+              <h2 className="text-xl font-semibold">SUD Life Insurance - Send Email</h2>
               <button
                 onClick={() => setIsSendEmailModalOpen(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
-                <X size={24} />
+                <X size={20} />
               </button>
             </div>
-            <div className="form-control mb-5">
-              <label className="label mb-2">
-                <span className="label-text">Receiver's Email</span>
-              </label>
+
+            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 flex items-start">
+              <div className="mr-3 text-blue-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+              </div>
+              <p className="text-sm text-blue-800">
+                Send an email notification to the specified user. The system will deliver the message to the recipient's inbox.
+              </p>
+            </div>
+
+            <div className="mb-5">
+              <label className="block text-gray-700 mb-2">Email</label>
               <input
                 type="email"
                 value={receiverMail}
                 onChange={(e) => setReceiverMail(e.target.value)}
                 placeholder="Enter email address"
-                className="input input-bordered w-full"
+                className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <div className="form-control mb-5">
-              <label className="label mb-2">
-                <span className="label-text">Message</span>
-              </label>
+
+            <div className="mb-5">
+              <label className="block text-gray-700 mb-2">Subject</label>
+              <input
+                type="text"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="Enter email subject"
+                className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div className="mb-5">
+              <label className="block text-gray-700 mb-2">Message</label>
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Enter your message"
-                className="textarea textarea-bordered w-full"
+                className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows="4"
               />
             </div>
-            <div className="flex justify-center gap-4 mt-6">
-              <button
-                onClick={handleMailSend}
-                disabled={!receiverMail || !message}
-                className={`bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 ${
-                  !receiverMail || !message
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
-                }`}
-              >
-                {isSendingMail && (
-                  <span className="loading loading-spinner loading-sm mr-2"></span>
-                )}
-                Send
-              </button>
+
+            <div className="flex justify-end gap-4 mt-6">
               <button
                 onClick={() => {
                   setIsSendEmailModalOpen(false);
                   setReceiverMail("");
+                  setSubject("");
                   setMessage("");
                 }}
-                className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
+                className="px-6 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-100"
               >
                 Cancel
+              </button>
+              <button
+                onClick={handleMailSend}
+                disabled={!receiverMail || !subject || !message}
+                className={`bg-blue-500 text-white px-6 py-2 rounded flex items-center ${!receiverMail || !subject || !message
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-blue-600"
+                  }`}
+              >
+                {isSendingMail && (
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                )}
+                Send Email
               </button>
             </div>
           </div>

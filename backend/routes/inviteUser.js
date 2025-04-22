@@ -72,9 +72,9 @@ InviteUser.post("/send-setup-links", upload.single("file"), async (req, res) => 
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
         users = XLSX.utils.sheet_to_json(sheet);
-        console.log("📄 Extracted users from Excel:", users);
+        console.log("Extracted users from Excel:", users);
       } catch (err) {
-        console.error("❌ Error parsing Excel file:", err);
+        console.error("Error parsing Excel file:", err);
         return res.status(400).json({ message: "Invalid Excel file." });
       }
     } else if (req.body.users) {
@@ -82,9 +82,9 @@ InviteUser.post("/send-setup-links", upload.single("file"), async (req, res) => 
         users = typeof req.body.users === "string"
           ? JSON.parse(req.body.users)
           : req.body.users;
-        console.log("📦 Received users from JSON:", users);
+        console.log("Received users from JSON:", users);
       } catch (err) {
-        console.error("❌ Error parsing JSON users:", err);
+        console.error("Error parsing JSON users:", err);
         return res.status(400).json({ message: "Invalid user data format." });
       }
     }else if (req.body.email && req.body.name) {
@@ -93,7 +93,7 @@ InviteUser.post("/send-setup-links", upload.single("file"), async (req, res) => 
         name: req.body.name,
         role: req.body.role || "user"
       }];
-      console.log("👤 Processing individual user:", users[0]);
+      console.log("Processing individual user:", users[0]);
     }
 
 
@@ -105,7 +105,7 @@ InviteUser.post("/send-setup-links", upload.single("file"), async (req, res) => 
 
     for (const { email, name, role } of users) {
       if (!email || !name || !role) {
-        responses.push({ email, status: "❌ Missing required fields" });
+        responses.push({ email, status: "Missing required fields" });
         continue;
       }
 
