@@ -58,6 +58,9 @@ export default function InventoryManagement() {
     goLiveDate: false,
     riskAssessmentDate: false,
     publish: false,
+    urls: false,
+    serviceWindow: false,
+    applicationDescription: false
   });
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
 
@@ -540,7 +543,7 @@ export default function InventoryManagement() {
 
         {/* Scrollable table section */}
         <div className="flex-1 overflow-auto">
-          <table className="table w-full">
+        <table className="table w-full">
             <thead className="sticky top-0 bg-white">
               <tr className="bg-gray-100 text-sm md:text-base">
                 {selectedColumns.appId && <th>App ID</th>}
@@ -567,6 +570,9 @@ export default function InventoryManagement() {
                 {selectedColumns.goLiveDate && <th>Go Live Date</th>}
                 {selectedColumns.riskAssessmentDate && <th>Risk Assessment</th>}
                 {selectedColumns.publish && <th>Publish</th>}
+                {selectedColumns.urls && <th>URLs</th>}
+                {selectedColumns.serviceWindow && <th>Service Window</th>}
+                {selectedColumns.applicationDescription && <th>Description</th>}
                 <th className="text-right">Actions</th>
               </tr>
             </thead>
@@ -635,6 +641,39 @@ export default function InventoryManagement() {
                     </td>
                   )}
                   {selectedColumns.publish && <td>{item.publish}</td>}
+                  {selectedColumns.urls && (
+                    <td>
+                      {item.urls ? (
+                        <div className="flex flex-col">
+                          {item.urls.externalProd && (
+                            <span>External Prod: {item.urls.externalProd}</span>
+                          )}
+                          {item.urls.externalUAT && (
+                            <span>External UAT: {item.urls.externalUAT}</span>
+                          )}
+                          {item.urls.internalProd && (
+                            <span>Internal Prod: {item.urls.internalProd}</span>
+                          )}
+                          {item.urls.internalUAT && (
+                            <span>Internal UAT: {item.urls.internalUAT}</span>
+                          )}
+                          {item.urls.api && <span>API: {item.urls.api}</span>}
+                        </div>
+                      ) : (
+                        "N/A"
+                      )}
+                    </td>
+                  )}
+                  {selectedColumns.serviceWindow && (
+                    <td>{item.serviceWindow || "N/A"}</td>
+                  )}
+                  {selectedColumns.applicationDescription && (
+                    <td>
+                      {item.applicationDescription
+                        ? `${item.applicationDescription.substring(0, 50)}...`
+                        : "N/A"}
+                    </td>
+                  )}
                   <td className="text-right">
                     <div className="flex flex-row justify-end">
                       <button
