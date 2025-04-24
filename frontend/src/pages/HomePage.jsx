@@ -72,6 +72,12 @@ export default function InventoryManagement() {
   });
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
 
+  
+
+  useEffect(() => {
+    fetchInventory();
+  }, []);
+
   const fetchInventory = async () => {
     try {
       const response = await axiosInstance.get("/inventory/get/all");
@@ -82,10 +88,6 @@ export default function InventoryManagement() {
       console.error("Error fetching inventory:", error);
     }
   };
-
-  useEffect(() => {
-    fetchInventory();
-  }, []);
 
   const getVisibleColumnsData = (items) => {
     return items.map((item) => {
@@ -202,36 +204,6 @@ export default function InventoryManagement() {
     XLSX.writeFile(wb, `inventory_data_${Date.now()}.xlsx`,{ bookType: 'xlsx', cellStyles: true });
   };
 
-  // const handleDownload = () => {
-  //   const visibleData = getVisibleColumnsData(filteredInventory);
-
-  //   // Convert to CSV
-  //   const headers = Object.keys(visibleData[0] || {});
-  //   const csvRows = [
-  //     headers.join(","),
-  //     ...visibleData.map((row) =>
-  //       headers
-  //         .map((fieldName) =>
-  //           JSON.stringify(row[fieldName] || "", (key, value) =>
-  //             value === null ? "" : value
-  //           )
-  //         )
-  //         .join(",")
-  //     ),
-  //   ].join("\n");
-
-  //   // Create download link
-  //   const blob = new Blob([csvRows], { type: "text/csv" });
-  //   const url = window.URL.createObjectURL(blob);
-  //   const a = document.createElement("a");
-  //   a.setAttribute("hidden", "");
-  //   a.setAttribute("href", url);
-  //   a.setAttribute("download", "inventory_data.csv");
-  //   document.body.appendChild(a);
-  //   a.click();
-  //   document.body.removeChild(a);
-  // };
-
   const handleView = (item) => {
     setCurrentViewItemId(item._id);
     setViewModalOpen(true);
@@ -281,31 +253,21 @@ export default function InventoryManagement() {
         return;
       }
 
-      const headers = Object.keys(visibleData[0]);
-      const csvContent = [
-        headers.join(","),
-        ...visibleData.map((row) =>
-          headers
-            .map((fieldName) =>
-              JSON.stringify(row[fieldName] || "", (key, value) =>
-                value === null ? "" : value
-              )
-            )
-            .join(",")
-        ),
-      ].join("\n");
-
       // Create FormData
       const formData = new FormData();
       formData.append("mail", receiverMail);
       formData.append("message", message);
 
       // Add BOM for UTF-8 and create blob
-      const blob = new Blob(["\uFEFF" + csvContent], {
-        type: "text/csv;charset=utf-8;",
-      });
-      formData.append("file", blob, "inventory_report.csv");
+      // const blob = new Blob(["\uFEFF" + csvContent], {
+      //   type: "text/csv;charset=utf-8;",
+      // });
+      formData.append("itemDetails", JSON.stringify(visibleData));
 
+      // console.log("Blob info", blob.size, blob.type);
+
+      console.log("FormData - Mail, Message, Data", formData.get("mail"), formData.get("message"), formData.get("itemDetails"));
+      
       // Send request - let browser set Content-Type automatically
       const res = await axiosInstance.post(
         "/generate-report/send-report",
@@ -319,7 +281,6 @@ export default function InventoryManagement() {
       setIsSendEmailModalOpen(false);
       setReceiverMail("");
       setMessage("");
-      setSubject("");
     } catch (error) {
       console.log("Error in signup: ", error);
       toast.error(error.response.data.message);
@@ -343,13 +304,6 @@ export default function InventoryManagement() {
       toast.error(error.response?.data?.message || "Logout failed");
     }
   };
-
-  // const toggleColumn = (column) => {
-  //   setSelectedColumns((prev) => ({
-  //     ...prev,
-  //     [column]: !prev[column],
-  //   }));
-  // };
 
   const filteredInventory = Array.isArray(inventory)
     ? inventory.filter(
@@ -886,7 +840,6 @@ export default function InventoryManagement() {
                 onClick={() => {
                   setIsSendEmailModalOpen(false);
                   setReceiverMail("");
-                  setSubject("");
                   setMessage("");
                 }}
                 className="px-6 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-100"
@@ -895,8 +848,8 @@ export default function InventoryManagement() {
               </button>
               <button
                 onClick={handleMailSend}
-                disabled={!receiverMail || !subject || !message}
-                className={`bg-blue-500 text-white px-6 py-2 rounded flex items-center ${!receiverMail || !subject || !message
+                disabled={!receiverMail || !message}
+                className={`bg-blue-500 text-white px-6 py-2 rounded flex items-center ${!receiverMail || !message
                   ? "opacity-50 cursor-not-allowed"
                   : "hover:bg-blue-600"
                   }`}
