@@ -16,6 +16,7 @@ import ViewEditItem from "./ViewEditItem";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import * as XLSX from 'xlsx';
+import { useAuthStore } from "../store/useAuthStore";
 
 export default function InventoryManagement() {
   const navigate = useNavigate();
@@ -71,9 +72,9 @@ export default function InventoryManagement() {
     }
   });
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
+  const {authUser} = useAuthStore();
 
   
-
   useEffect(() => {
     fetchInventory();
   }, []);
@@ -529,12 +530,12 @@ export default function InventoryManagement() {
           <h1 className="text-xl font-bold mb-5">
             SUD Software Inventory Manager
           </h1>
-          <button
+          {authUser.role === "admin" && <button
             onClick={AddUser}
             className="btn btn-primary !flex !items-center !gap-2"
           >
             <UserCog size={18} />
-          </button>
+          </button>}
         </div>
         <button
           onClick={() => setSidebarOpen(true)}
