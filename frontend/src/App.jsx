@@ -16,7 +16,7 @@ function App() {
     checkAuth();
   }, []);
 
-  console.log("Authentication User" + {authUser});
+  console.log("Authentication User" + JSON.stringify(authUser));
 
   if (isCheckingAuth === true) {
     // If checking auth is in progress, show a loader
