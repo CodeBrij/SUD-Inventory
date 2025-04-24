@@ -125,7 +125,7 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
       await axiosInstance.post(`/inventory/add`, formData);
       fetchInventory();
       onClose();
-      toast("Inventory item added successfully!");
+      toast.success("Inventory item added successfully!");
     } catch (error) {
       toast.error("Error adding inventory item. Please try again.");
       console.error("Error adding inventory:", error);

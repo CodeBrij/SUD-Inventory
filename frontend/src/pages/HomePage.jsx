@@ -15,6 +15,7 @@ import AddItem from "./AddItem";
 import ViewEditItem from "./ViewEditItem";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
+import * as XLSX from 'xlsx';
 
 export default function InventoryManagement() {
   const navigate = useNavigate();
@@ -58,9 +59,15 @@ export default function InventoryManagement() {
     goLiveDate: false,
     riskAssessmentDate: false,
     publish: false,
-    urls: false,
     serviceWindow: false,
-    applicationDescription: false
+    applicationDescription: false,
+    urls: {
+      externalProd: true,
+      externalUAT: true,
+      internalProd: true,
+      internalUAT: true,
+      api: true
+    }
   });
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
 
@@ -91,35 +98,138 @@ export default function InventoryManagement() {
     });
   };
 
+  const toggleColumn = (column) => {
+    if (column === 'urls') {
+      // Toggle all URL sub-fields
+      const allUrlsSelected = Object.values(selectedColumns.urls).every(val => val);
+      setSelectedColumns(prev => ({
+        ...prev,
+        urls: {
+          externalProd: !allUrlsSelected,
+          externalUAT: !allUrlsSelected,
+          internalProd: !allUrlsSelected,
+          internalUAT: !allUrlsSelected,
+          api: !allUrlsSelected
+        }
+      }));
+    } else if (column.startsWith('urls.')) {
+      // Toggle specific URL sub-field
+      const urlField = column.split('.')[1];
+      setSelectedColumns(prev => ({
+        ...prev,
+        urls: {
+          ...prev.urls,
+          [urlField]: !prev.urls[urlField]
+        }
+      }));
+    } else {
+      // Toggle regular column
+      setSelectedColumns(prev => ({
+        ...prev,
+        [column]: !prev[column]
+      }));
+    }
+  };
+
   const handleDownload = () => {
     const visibleData = getVisibleColumnsData(filteredInventory);
 
-    // Convert to CSV
-    const headers = Object.keys(visibleData[0] || {});
-    const csvRows = [
-      headers.join(","),
-      ...visibleData.map((row) =>
-        headers
-          .map((fieldName) =>
-            JSON.stringify(row[fieldName] || "", (key, value) =>
-              value === null ? "" : value
-            )
-          )
-          .join(",")
-      ),
-    ].join("\n");
-
-    // Create download link
-    const blob = new Blob([csvRows], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.setAttribute("hidden", "");
-    a.setAttribute("href", url);
-    a.setAttribute("download", "inventory_data.csv");
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    
+    // Prepare data for worksheet
+    const headers = [];
+    const dataRows = [];
+    
+    // Add regular columns
+    Object.keys(selectedColumns).forEach(col => {
+      if (col !== 'urls' && selectedColumns[col]) {
+        headers.push(col);
+      }
+    });
+    
+    // Add URL columns
+    if (selectedColumns.urls) {
+      Object.keys(selectedColumns.urls).forEach(urlCol => {
+        if (selectedColumns.urls[urlCol]) {
+          headers.push(`URL ${urlCol}`);
+        }
+      });
+    }
+    
+    // Add data rows
+    visibleData.forEach(item => {
+      const row = [];
+      
+      // Add regular columns
+      Object.keys(selectedColumns).forEach(col => {
+        if (col !== 'urls' && selectedColumns[col]) {
+          row.push(item[col] || '');
+        }
+      });
+      
+      // Add URL columns
+      if (selectedColumns.urls && item.urls) {
+        Object.keys(selectedColumns.urls).forEach(urlCol => {
+          if (selectedColumns.urls[urlCol]) {
+            row.push(item.urls[urlCol] || '');
+          }
+        });
+      }
+      
+      dataRows.push(row);
+    });
+    
+    // Create worksheet with headers
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...dataRows]);
+    
+    // Style headers (bold)
+    if (ws['!cols'] === undefined) ws['!cols'] = [];
+    headers.forEach((_, i) => {
+      ws['!cols'][i] = { wch: 24 }; // Set column width
+      const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
+      if (!ws[cellRef]) ws[cellRef] = {};
+      if (!ws[cellRef].s) ws[cellRef].s = {};
+      ws[cellRef].s = { font: { bold: true },
+      alignment: { horizontal: "center", vertical: "center" } };
+    });
+    
+    // Add worksheet to workbook
+    XLSX.utils.book_append_sheet(wb, ws, `Inventory Data`);
+    
+    // Download
+    XLSX.writeFile(wb, `inventory_data_${Date.now()}.xlsx`,{ bookType: 'xlsx', cellStyles: true });
   };
+
+  // const handleDownload = () => {
+  //   const visibleData = getVisibleColumnsData(filteredInventory);
+
+  //   // Convert to CSV
+  //   const headers = Object.keys(visibleData[0] || {});
+  //   const csvRows = [
+  //     headers.join(","),
+  //     ...visibleData.map((row) =>
+  //       headers
+  //         .map((fieldName) =>
+  //           JSON.stringify(row[fieldName] || "", (key, value) =>
+  //             value === null ? "" : value
+  //           )
+  //         )
+  //         .join(",")
+  //     ),
+  //   ].join("\n");
+
+  //   // Create download link
+  //   const blob = new Blob([csvRows], { type: "text/csv" });
+  //   const url = window.URL.createObjectURL(blob);
+  //   const a = document.createElement("a");
+  //   a.setAttribute("hidden", "");
+  //   a.setAttribute("href", url);
+  //   a.setAttribute("download", "inventory_data.csv");
+  //   document.body.appendChild(a);
+  //   a.click();
+  //   document.body.removeChild(a);
+  // };
 
   const handleView = (item) => {
     setCurrentViewItemId(item._id);
@@ -235,12 +345,12 @@ export default function InventoryManagement() {
     }
   };
 
-  const toggleColumn = (column) => {
-    setSelectedColumns((prev) => ({
-      ...prev,
-      [column]: !prev[column],
-    }));
-  };
+  // const toggleColumn = (column) => {
+  //   setSelectedColumns((prev) => ({
+  //     ...prev,
+  //     [column]: !prev[column],
+  //   }));
+  // };
 
   const filteredInventory = Array.isArray(inventory)
     ? inventory.filter(
@@ -510,30 +620,64 @@ export default function InventoryManagement() {
               <span className="hidden lg:inline">Edit View</span>
             </button>
             {showColumnDropdown && (
-              <div
-                className="absolute right-10 mt-10 w-56 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-1000"
-                style={{ maxHeight: "60vh", overflowY: "auto" }}
-              >
-                <div className="py-1">
-                  {Object.keys(selectedColumns).map((column) => (
-                    <div key={column} className="px-4 py-2 hover:bg-gray-100">
-                      <label className="flex items-center space-x-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={selectedColumns[column]}
-                          onChange={() => toggleColumn(column)}
-                          className="form-checkbox h-4 w-4 text-blue-600 rounded"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <span className="text-gray-700 capitalize">
-                          {column.replace(/([A-Z])/g, " $1").trim()}
-                        </span>
-                      </label>
-                    </div>
-                  ))}
+        <div
+          className="absolute right-10 mt-10 w-56 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-1000"
+          style={{ maxHeight: "60vh", overflowY: "auto" }}
+        >
+          <div className="py-1">
+            {Object.keys(selectedColumns)
+              .filter(col => col !== 'urls')
+              .map((column) => (
+                <div key={column} className="px-4 py-2 hover:bg-gray-100">
+                  <label className="flex items-center space-x-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedColumns[column]}
+                      onChange={() => toggleColumn(column)}
+                      className="form-checkbox h-4 w-4 text-blue-600 rounded"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <span className="text-gray-700 capitalize">
+                      {column.replace(/([A-Z])/g, " $1").trim()}
+                    </span>
+                  </label>
                 </div>
+              ))}
+            
+            {/* URL sub-fields */}
+            <div className="px-4 py-2 hover:bg-gray-100">
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={Object.values(selectedColumns.urls).every(val => val)}
+                  onChange={() => toggleColumn('urls')}
+                  className="form-checkbox h-4 w-4 text-blue-600 rounded"
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <span className="text-gray-700 font-medium">URLs</span>
+              </label>
+              
+              <div className="ml-6 mt-1 space-y-1">
+                {Object.keys(selectedColumns.urls).map(urlField => (
+                  <div key={urlField} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedColumns.urls[urlField]}
+                      onChange={() => toggleColumn(`urls.${urlField}`)}
+                      className="form-checkbox h-3 w-3 text-blue-600 rounded"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <span className="text-gray-600 text-sm capitalize">
+                      {urlField.replace(/([A-Z])/g, " $1").trim()}
+                    </span>
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
+          </div>
+        </div>
+      )}
+
             <button onClick={handleMail} className="btn btn-primary">
               <Mail size={18} />{" "}
               <span className="hidden lg:inline">Send Mail</span>
@@ -546,6 +690,7 @@ export default function InventoryManagement() {
         <table className="table w-full">
             <thead className="sticky top-0 bg-white">
               <tr className="bg-gray-100 text-sm md:text-base">
+                {/* Regular columns */}
                 {selectedColumns.appId && <th>App ID</th>}
                 {selectedColumns.applicationName && <th>App Name</th>}
                 {selectedColumns.severity && <th>Severity</th>}
@@ -570,110 +715,63 @@ export default function InventoryManagement() {
                 {selectedColumns.goLiveDate && <th>Go Live Date</th>}
                 {selectedColumns.riskAssessmentDate && <th>Risk Assessment</th>}
                 {selectedColumns.publish && <th>Publish</th>}
-                {selectedColumns.urls && <th>URLs</th>}
                 {selectedColumns.serviceWindow && <th>Service Window</th>}
                 {selectedColumns.applicationDescription && <th>Description</th>}
+                
+                {/* URL columns */}
+                {selectedColumns.urls?.externalProd && <th>URL External Prod</th>}
+                {selectedColumns.urls?.externalUAT && <th>URL External UAT</th>}
+                {selectedColumns.urls?.internalProd && <th>URL Internal Prod</th>}
+                {selectedColumns.urls?.internalUAT && <th>URL Internal UAT</th>}
+                {selectedColumns.urls?.api && <th>URL API</th>}
+                
                 <th className="text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredInventory.map((item) => (
                 <tr key={item._id} className="border-t text-sm md:text-base">
+                  {/* Regular columns */}
                   {selectedColumns.appId && <td>{item.appId}</td>}
-                  {selectedColumns.applicationName && (
-                    <td>{item.applicationName}</td>
-                  )}
+                  {selectedColumns.applicationName && <td>{item.applicationName}</td>}
                   {selectedColumns.severity && <td>{item.severity}</td>}
                   {selectedColumns.deployment && <td>{item.deployment}</td>}
                   {selectedColumns.stage && <td>{item.stage}</td>}
-                  {selectedColumns.applicationType && (
-                    <td>{item.applicationType}</td>
-                  )}
+                  {selectedColumns.applicationType && <td>{item.applicationType}</td>}
                   {selectedColumns.serviceType && <td>{item.serviceType}</td>}
                   {selectedColumns.developedBy && <td>{item.developedBy}</td>}
-                  {selectedColumns.cloudProvider && (
-                    <td>{item.cloudProvider}</td>
-                  )}
+                  {selectedColumns.cloudProvider && <td>{item.cloudProvider}</td>}
                   {selectedColumns.manager && <td>{item.manager}</td>}
                   {selectedColumns.vaptStatus && <td>{item.vaptStatus}</td>}
-                  {selectedColumns.endpointSecurity && (
-                    <td>{item.endpointSecurity}</td>
-                  )}
-                  {selectedColumns.accessControl && (
-                    <td>{item.accessControl}</td>
-                  )}
-                  {selectedColumns.socMonitoring && (
-                    <td>{item.socMonitoring ? "Yes" : "No"}</td>
-                  )}
-                  {selectedColumns.smtpEnabled && (
-                    <td>{item.smtpEnabled ? "Yes" : "No"}</td>
-                  )}
-                  {selectedColumns.businessOwner && (
-                    <td>{item.businessOwner}</td>
-                  )}
-                  {selectedColumns.businessDeptOwner && (
-                    <td>{item.businessDeptOwner}</td>
-                  )}
-                  {selectedColumns.businessSeverity && (
-                    <td>{item.businessSeverity}</td>
-                  )}
-                  {selectedColumns.technologyStack && (
-                    <td>{item.technologyStack?.join(", ")}</td>
-                  )}
-                  {selectedColumns.availabilityRating && (
-                    <td>{item.availabilityRating}</td>
-                  )}
-                  {selectedColumns.criticalityRating && (
-                    <td>{item.criticalityRating}</td>
-                  )}
+                  {selectedColumns.endpointSecurity && <td>{item.endpointSecurity}</td>}
+                  {selectedColumns.accessControl && <td>{item.accessControl}</td>}
+                  {selectedColumns.socMonitoring && <td>{item.socMonitoring ? "Yes" : "No"}</td>}
+                  {selectedColumns.smtpEnabled && <td>{item.smtpEnabled ? "Yes" : "No"}</td>}
+                  {selectedColumns.businessOwner && <td>{item.businessOwner}</td>}
+                  {selectedColumns.businessDeptOwner && <td>{item.businessDeptOwner}</td>}
+                  {selectedColumns.businessSeverity && <td>{item.businessSeverity}</td>}
+                  {selectedColumns.technologyStack && <td>{item.technologyStack?.join(", ")}</td>}
+                  {selectedColumns.availabilityRating && <td>{item.availabilityRating}</td>}
+                  {selectedColumns.criticalityRating && <td>{item.criticalityRating}</td>}
                   {selectedColumns.goLiveDate && (
-                    <td>
-                      {item.goLiveDate
-                        ? new Date(item.goLiveDate).toLocaleDateString()
-                        : "N/A"}
-                    </td>
+                    <td>{item.goLiveDate ? new Date(item.goLiveDate).toLocaleDateString() : "N/A"}</td>
                   )}
                   {selectedColumns.riskAssessmentDate && (
-                    <td>
-                      {item.riskAssessmentDate
-                        ? new Date(item.riskAssessmentDate).toLocaleDateString()
-                        : "N/A"}
-                    </td>
+                    <td>{item.riskAssessmentDate ? new Date(item.riskAssessmentDate).toLocaleDateString() : "N/A"}</td>
                   )}
                   {selectedColumns.publish && <td>{item.publish}</td>}
-                  {selectedColumns.urls && (
-                    <td>
-                      {item.urls ? (
-                        <div className="flex flex-col">
-                          {item.urls.externalProd && (
-                            <span>External Prod: {item.urls.externalProd}</span>
-                          )}
-                          {item.urls.externalUAT && (
-                            <span>External UAT: {item.urls.externalUAT}</span>
-                          )}
-                          {item.urls.internalProd && (
-                            <span>Internal Prod: {item.urls.internalProd}</span>
-                          )}
-                          {item.urls.internalUAT && (
-                            <span>Internal UAT: {item.urls.internalUAT}</span>
-                          )}
-                          {item.urls.api && <span>API: {item.urls.api}</span>}
-                        </div>
-                      ) : (
-                        "N/A"
-                      )}
-                    </td>
-                  )}
-                  {selectedColumns.serviceWindow && (
-                    <td>{item.serviceWindow || "N/A"}</td>
-                  )}
+                  {selectedColumns.serviceWindow && <td>{item.serviceWindow || "N/A"}</td>}
                   {selectedColumns.applicationDescription && (
-                    <td>
-                      {item.applicationDescription
-                        ? `${item.applicationDescription.substring(0, 50)}...`
-                        : "N/A"}
-                    </td>
+                    <td>{item.applicationDescription ? `${item.applicationDescription.substring(0, 50)}...` : "N/A"}</td>
                   )}
+                  
+                  {/* URL columns */}
+                  {selectedColumns.urls?.externalProd && <td>{item.urls?.externalProd || "N/A"}</td>}
+                  {selectedColumns.urls?.externalUAT && <td>{item.urls?.externalUAT || "N/A"}</td>}
+                  {selectedColumns.urls?.internalProd && <td>{item.urls?.internalProd || "N/A"}</td>}
+                  {selectedColumns.urls?.internalUAT && <td>{item.urls?.internalUAT || "N/A"}</td>}
+                  {selectedColumns.urls?.api && <td>{item.urls?.api || "N/A"}</td>}
+                  
                   <td className="text-right">
                     <div className="flex flex-row justify-end">
                       <button
