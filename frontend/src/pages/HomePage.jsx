@@ -1172,10 +1172,13 @@ export default function InventoryManagement() {
       setDeleteModalOpen(false);
       toast.success("Item deleted successfully");
     } catch (error) {
+      const errorMessage = error?.response?.data?.message || "Failed to delete inventory. Please try again.";
+      toast.error(errorMessage);
       console.error("Error deleting inventory:", error);
-      toast.error("Failed to delete inventory. Please try again.");
     }
   };
+
+
 
   const handleAdd = () => {
     setAddModalOpen(true);
@@ -1815,6 +1818,8 @@ export default function InventoryManagement() {
           </div>
         </div>
       )}
+
+
     </div>
   );
 }
