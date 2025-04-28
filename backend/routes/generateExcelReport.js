@@ -7,7 +7,8 @@ import csv from "csv-parser";
 import sendEmailWithAttachment from "../middleware/sendEmailWithAttachment.js";
 
 const GenerateExcelReportRouter = express.Router();
-const upload = multer({ dest: "uploads/" }); // Temporary storage
+// const upload = multer({ dest: "uploads/" }); // Temporary storage
+const upload = multer(); // Temporary storage
 
 // // GenerateExcelReportRouter.post("/send-report", jwtAuth(), upload.single('file'), async (req, res) => {
 // //     const userId = req.userId;
@@ -61,19 +62,26 @@ const upload = multer({ dest: "uploads/" }); // Temporary storage
 
 // // export default GenerateExcelReportRouter;
 
-
-GenerateExcelReportRouter.post("/send-report", jwtAuth(), async (req, res) => {
+GenerateExcelReportRouter.post("/send-report", jwtAuth(), upload.none(), async (req, res) => {
     const userId = req.user.id;
     const userEmail = req.user.email;
     
     console.log("User ID:", userId);
     console.log("User Email:", userEmail);
     if (!userId || !userEmail) {
-        return res.status(401).json({ message: 'Unauthorized: No token provided' });
+        return res.status(401).json({ message: 'Unauthorized: No token provided'
+         });
     }
 
     try {
-        const { mail, message, subject, itemDetails } = req.body;
+        console.log("Full Req.Body: ", req.body);
+        
+        const { mail, message } = req.body;
+
+        let itemDetails;
+        itemDetails = typeof req.body.itemDetails === "string"
+        ? JSON.parse(req.body.itemDetails)
+        : req.body.itemDetails;
 
         console.log("req body : ", req.body.itemDetails);
         if (!itemDetails || itemDetails.length === 0) {
