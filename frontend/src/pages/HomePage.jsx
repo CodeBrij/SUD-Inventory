@@ -65,6 +65,11 @@ export default function InventoryManagement() {
   });
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
 
+
+  // Show URL State
+  const [selectedURLItem, setSelectedURLItem] = useState(null);
+
+
   const fetchInventory = async () => {
     try {
       const response = await axiosInstance.get("/inventory/get/all");
@@ -150,10 +155,12 @@ export default function InventoryManagement() {
       setDeleteModalOpen(false);
       toast.success("Item deleted successfully");
     } catch (error) {
+      const errorMessage = error?.response?.data?.message || "Failed to delete inventory. Please try again.";
+      toast.error(errorMessage);
       console.error("Error deleting inventory:", error);
-      toast.error("Failed to delete inventory. Please try again.");
     }
   };
+
 
   const handleAdd = () => {
     setAddModalOpen(true);
@@ -677,29 +684,66 @@ export default function InventoryManagement() {
                     </td>
                   )}
                   {selectedColumns.publish && <td>{item.publish}</td>}
+
                   {selectedColumns.urls && (
                     <td>
                       {item.urls ? (
-                        <div className="flex flex-col">
-                          {item.urls.externalProd && (
-                            <span>External Prod: {item.urls.externalProd}</span>
+                        <div>
+                          {/* Button to open Modal */}
+                          <button
+                            onClick={() => setSelectedURLItem(item)}
+                            className="text-blue-500 underline cursor"
+                          >
+                            View URLs
+                          </button>
+
+                          {/* URL Modal */}
+                          {selectedURLItem && selectedURLItem._id === item._id && (
+                            <div
+                              className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-20 z-50"
+                              onClick={() => setSelectedURLItem(null)} // close on background click
+                            >
+                              <div
+                                className="bg-white p-6 rounded-lg w-96 max-h-[80vh] overflow-y-auto"
+                                onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside
+                              >
+                                <h2 className="text-lg font-semibold mb-4">URLs</h2>
+                                <div className="flex flex-col gap-2">
+                                  {selectedURLItem.urls.externalProd && (
+                                    <div><strong>External Prod:</strong> {selectedURLItem.urls.externalProd}</div>
+                                  )}
+                                  {selectedURLItem.urls.externalUAT && (
+                                    <div><strong>External UAT:</strong> {selectedURLItem.urls.externalUAT}</div>
+                                  )}
+                                  {selectedURLItem.urls.internalProd && (
+                                    <div><strong>Internal Prod:</strong> {selectedURLItem.urls.internalProd}</div>
+                                  )}
+                                  {selectedURLItem.urls.internalUAT && (
+                                    <div><strong>Internal UAT:</strong> {selectedURLItem.urls.internalUAT}</div>
+                                  )}
+                                  {selectedURLItem.urls.api && (
+                                    <div><strong>API:</strong> {selectedURLItem.urls.api}</div>
+                                  )}
+                                </div>
+
+                                {/* Close Button */}
+                                <button
+                                  onClick={() => setSelectedURLItem(null)}
+                                  className="mt-4 bg-red-500 text-white py-1 px-4 rounded hover:bg-red-600"
+                                >
+                                  Close
+                                </button>
+                              </div>
+                            </div>
                           )}
-                          {item.urls.externalUAT && (
-                            <span>External UAT: {item.urls.externalUAT}</span>
-                          )}
-                          {item.urls.internalProd && (
-                            <span>Internal Prod: {item.urls.internalProd}</span>
-                          )}
-                          {item.urls.internalUAT && (
-                            <span>Internal UAT: {item.urls.internalUAT}</span>
-                          )}
-                          {item.urls.api && <span>API: {item.urls.api}</span>}
                         </div>
                       ) : (
                         "N/A"
                       )}
                     </td>
                   )}
+
+
                   {selectedColumns.serviceWindow && (
                     <td>{item.serviceWindow || "N/A"}</td>
                   )}

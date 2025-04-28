@@ -102,13 +102,17 @@ export default function ViewEditItem({ itemId, isOpen, onClose, fetchInventory }
     try {
       setIsSaving(true);
       await axiosInstance.put(`/inventory/update/${itemId}`, formData);
+      toast.success("Successfully Updated");
       await fetchInventory();
       onClose();
     } catch (error) {
+      const errorMessage = error?.response?.data?.message || "Error updating inventory";
+      toast.error(errorMessage);
       console.error("Error updating inventory:", error);
       setIsSaving(false);
     }
   };
+
 
   if (!isOpen) return null;
 
