@@ -1,68 +1,18 @@
-// import express from "express";
-// import crypto from "crypto";
-// import sendEmail from "../middleware/sendEmail.js";
-// import LoginModel from "../models/login.js";
-
-// const InviteUser = express.Router();
-
-// InviteUser.post("/send-setup-links", async (req, res) => {
-//   try {
-//     const { email, name, role } = req.body;
-
-//     let user = await LoginModel.findOne({ email });
-
-//     // If user doesn't exist, create one
-//     if (!user) {
-//       user = new LoginModel({ email, name });
-//     }
-
-//     // Generate token and expiration
-//     const token = crypto.randomBytes(32).toString("hex");
-//     user.setupToken = token;
-//     user.setupTokenExpires = Date.now() + 1000 * 60 * 60 * 24; // 24 hours
-//     user.name = name;
-//     user.role = role;
-//     await user.save();
-
-//     const setupLink = `http://localhost:5173/setup-password/${token}`;
-
-//     const emailContent = `
-//       <p>Hi ${user.name || "there"},</p>
-//       <p>You’ve been added to the Inventory Management System.</p>
-//       <p>Please click below to set your password (link valid for 24 hours):</p>
-//       <a href="${setupLink}">${setupLink}</a>
-//       <p>Thanks,<br/>Admin Team</p>
-//     `;
-
-//     await sendEmail({
-//       to: user.email,
-//       subject: "Set your password – Inventory System",
-//       html: emailContent,
-//     });
-
-//     res.json({ message: "✅ Setup email sent successfully!" });
-//   } catch (err) {
-//     console.error("❌ Error sending setup email:", err);
-//     res.status(500).json({ message: "Error sending setup email." });
-//   }
-// });
-
-// export default InviteUser;
-
-
-
 import express from "express";
 import crypto from "crypto";
 import multer from "multer";
 import * as XLSX from "xlsx";
 import sendEmail from "../middleware/sendEmail.js";
 import LoginModel from "../models/login.js";
+import jwtAuth from "../middleware/auth.js";
 
 const InviteUser = express.Router();
+const ROLES = {
+  ADMIN: 'admin',
+  USER: 'user'
+};
 
-// Configure multer for file upload
-const upload = multer({ storage: multer.memoryStorage() });
-InviteUser.post("/send-setup-links", upload.single("file"), async (req, res) => {
+InviteUser.post("/send-setup-links", jwtAuth([ROLES.ADMIN]), async (req, res) => {
   try {
     let users = [];
 
@@ -123,32 +73,32 @@ InviteUser.post("/send-setup-links", upload.single("file"), async (req, res) => 
         user.role =  role.toLowerCase();
         await user.save();
 
-        // dynamic frontend url 
-        const setupLink = `http://localhost:5173/setup-password/${token}`;
+        if(!user.isSetupComplete){
+          const setupLink = `http://localhost:5173/setup-password/${token}`;
+          const emailContent = `
+            <p>Hi ${user.name},</p>
+            <p>You’ve been added to the Inventory Management System.</p>
+            <p>Please click below to set your password (link valid for 24 hours):</p>
+            <a href="${setupLink}">${setupLink}</a>
+            <p>Thanks,<br/>Admin Team</p>
+          `;
 
-        const emailContent = `
-          <p>Hi ${user.name},</p>
-          <p>You’ve been added to the Inventory Management System.</p>
-          <p>Please click below to set your password (link valid for 24 hours):</p>
-          <a href="${setupLink}">${setupLink}</a>
-          <p>Thanks,<br/>Admin Team</p>
-        `;
+          await sendEmail({
+            to: user.email,
+            subject: "Set your password – Inventory System",
+            html: emailContent,
+          });
 
-        await sendEmail({
-          to: user.email,
-          subject: "Set your password – Inventory System",
-          html: emailContent,
-        });
-
-        responses.push({ email, status: "✅ Email sent successfully" });
+          responses.push({ email, msg: "✅ Email sent successfully" });
+        }else{
+          responses.push({ email,msg: "❌ Email sent successfully" });
+        }
       } catch (err) {
         console.error(`❌ Error for ${email}:`, err.message);
-        responses.push({ email, status: `❌ Error sending email` });
+        responses.push({ email, msg: `❌ Error sending email` });
       }
     }
-
     res.json({ message: "✅ Process completed", data: responses });
-
   } catch (err) {
     console.error("❌ Server error:", err);
     res.status(500).json({ message: "Server error." });

@@ -60,6 +60,7 @@ InventoryRouter.get("/getById/:id", jwtAuth(), async (req, res) => {
 
 InventoryRouter.put("/update/:id", jwtAuth([ROLES.ADMIN]), async (req, res) => {
   const userId = req.userId;
+
   if (!userId) {
     return res.status(401).json({ message: 'Unauthorized: No token provided' });
   }
@@ -97,7 +98,6 @@ InventoryRouter.delete("/delete/:id",jwtAuth([ROLES.ADMIN]), async (req, res) =>
 
   try {
     const { id } = req.params;
-
 
     const deletedInventory = await InventoryModel.findByIdAndDelete(id);
     if (!deletedInventory) {
