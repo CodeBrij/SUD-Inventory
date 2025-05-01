@@ -91,7 +91,7 @@ InviteUser.post("/send-setup-links", jwtAuth([ROLES.ADMIN]), async (req, res) =>
 
           responses.push({ email, msg: "✅ Email sent successfully" });
         }else{
-          responses.push({ email,msg: "❌ Email sent successfully" });
+          responses.push({ email,msg: "❌ Already Complete Setup" });
         }
       } catch (err) {
         console.error(`❌ Error for ${email}:`, err.message);
