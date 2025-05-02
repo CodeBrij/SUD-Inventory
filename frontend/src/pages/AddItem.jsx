@@ -2,6 +2,7 @@ import { useState } from "react";
 import { axiosInstance } from "../lib/axios";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import toast from "react-hot-toast";
+import UrlSections from "./UrlSections";
 
 
 export default function AddItem({ isOpen, onClose, fetchInventory }) {
@@ -10,11 +11,11 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
     appId: "",
     applicationName: "",
     urls: {
-      externalProd: "",
-      externalUAT: "",
-      internalProd: "",
-      internalUAT: "",
-      api: ""
+      externalProd: [],
+      externalUAT: [],
+      internalProd: [],
+      internalUAT: [],
+      api: []
     },
     severity: "Non-Critical",
     deployment: "Onprem",
@@ -721,66 +722,9 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                     className="input input-bordered w-full"
                   />
                 </div>
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">External Prod URL</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="urls.externalProd"
-                    value={formData.urls.externalProd}
-                    onChange={handleChange}
-                    className="input input-bordered w-full"
-                  />
-                </div>
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">External UAT URL</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="urls.externalUAT"
-                    value={formData.urls.externalUAT}
-                    onChange={handleChange}
-                    className="input input-bordered w-full"
-                  />
-                </div>
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Internal Prod URL</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="urls.internalProd"
-                    value={formData.urls.internalProd}
-                    onChange={handleChange}
-                    className="input input-bordered w-full"
-                  />
-                </div>
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Internal UAT URL</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="urls.internalUAT"
-                    value={formData.urls.internalUAT}
-                    onChange={handleChange}
-                    className="input input-bordered w-full"
-                  />
-                </div>
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">API URL</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="urls.api"
-                    value={formData.urls.api}
-                    onChange={handleChange}
-                    className="input input-bordered w-full"
-                  />
-                </div>
+
+                <UrlSections formData={formData} setFormData={setFormData} />
+
               </div>
             </div>
           )}

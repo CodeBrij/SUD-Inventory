@@ -674,11 +674,76 @@ export default function InventoryManagement() {
                   )}
 
                   {/* URL columns */}
-                  {selectedColumns.urls?.externalProd && <td>{item.urls?.externalProd || "N/A"}</td>}
-                  {selectedColumns.urls?.externalUAT && <td>{item.urls?.externalUAT || "N/A"}</td>}
-                  {selectedColumns.urls?.internalProd && <td>{item.urls?.internalProd || "N/A"}</td>}
-                  {selectedColumns.urls?.internalUAT && <td>{item.urls?.internalUAT || "N/A"}</td>}
-                  {selectedColumns.urls?.api && <td>{item.urls?.api || "N/A"}</td>}
+                  {/* External Prod URLs */}
+                  {selectedColumns.urls?.externalProd && (
+                    <td>
+                      {item.urls?.externalProd?.map((url, index) => (
+                        <div key={index}>
+                          <a href={url.url} target="_blank" rel="noopener noreferrer">
+                            {url.name || url.url}
+                          </a>
+                          {!url.isActive && <span className="inactive-badge">Inactive</span>}
+                        </div>
+                      ))}
+                    </td>
+                  )}
+
+                  {/* External UAT URLs */}
+                  {selectedColumns.urls?.externalUAT && (
+                    <td>
+                      {item.urls?.externalUAT?.map((url, index) => (
+                        <div key={index}>
+                          <a href={url.url} target="_blank" rel="noopener noreferrer">
+                            {url.name || url.url}
+                          </a>
+                          {!url.isActive && <span className="inactive-badge">Inactive</span>}
+                        </div>
+                      ))}
+                    </td>
+                  )}
+
+                  {/* Internal Prod URLs */}
+                  {selectedColumns.urls?.internalProd && (
+                    <td>
+                      {item.urls?.internalProd?.map((url, index) => (
+                        <div key={index}>
+                          <a href={url.url} target="_blank" rel="noopener noreferrer">
+                            {url.name || url.url}
+                          </a>
+                          {!url.isActive && <span className="inactive-badge">Inactive</span>}
+                        </div>
+                      ))}
+                    </td>
+                  )}
+
+                  {/* Internal UAT URLs */}
+                  {selectedColumns.urls?.internalUAT && (
+                    <td>
+                      {item.urls?.internalUAT?.map((url, index) => (
+                        <div key={index}>
+                          <a href={url.url} target="_blank" rel="noopener noreferrer">
+                            {url.name || url.url}
+                          </a>
+                          {!url.isActive && <span className="inactive-badge">Inactive</span>}
+                        </div>
+                      ))}
+                    </td>
+                  )}
+
+                  {/* API URLs */}
+                  {selectedColumns.urls?.api && (
+                    <td>
+                      {item.urls?.api?.map((url, index) => (
+                        <div key={index}>
+                          <a href={url.url} target="_blank" rel="noopener noreferrer">
+                            {url.name || url.url}
+                          </a>
+                          {!url.isActive && <span className="inactive-badge">Inactive</span>}
+                        </div>
+                      ))}
+                    </td>
+                  )}
+
 
                   <td className="text-right">
                     <div className="flex flex-row justify-end">

@@ -3,6 +3,7 @@ import { axiosInstance } from "../lib/axios";
 import { X, Save } from "lucide-react";
 import toast from "react-hot-toast";
 import VaptStatusManager from "./VaptStatusManager";
+import UrlSections from "./UrlSections";
 
 export default function ViewEditItem({ itemId, isOpen, onClose, fetchInventory }) {
   const [originalData, setOriginalData] = useState(null);
@@ -141,7 +142,7 @@ export default function ViewEditItem({ itemId, isOpen, onClose, fetchInventory }
 
   return (
     <div className="fixed inset-0 bg-base-100 bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">View/Edit Inventory Item</h2>
@@ -247,69 +248,7 @@ export default function ViewEditItem({ itemId, isOpen, onClose, fetchInventory }
             </div>
 
             {/* URLs */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold border-b pb-2">URLs</h3>
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">External Prod URL</span>
-                </label>
-                <input
-                  type="text"
-                  name="urls.externalProd"
-                  value={formData.urls?.externalProd || ''}
-                  onChange={handleChange}
-                  className="input input-bordered w-full"
-                />
-              </div>
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">External UAT URL</span>
-                </label>
-                <input
-                  type="text"
-                  name="urls.externalUAT"
-                  value={formData.urls?.externalUAT || ''}
-                  onChange={handleChange}
-                  className="input input-bordered w-full"
-                />
-              </div>
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Internal Prod URL</span>
-                </label>
-                <input
-                  type="text"
-                  name="urls.internalProd"
-                  value={formData.urls?.internalProd || ''}
-                  onChange={handleChange}
-                  className="input input-bordered w-full"
-                />
-              </div>
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Internal UAT URL</span>
-                </label>
-                <input
-                  type="text"
-                  name="urls.internalUAT"
-                  value={formData.urls?.internalUAT || ''}
-                  onChange={handleChange}
-                  className="input input-bordered w-full"
-                />
-              </div>
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">API URL</span>
-                </label>
-                <input
-                  type="text"
-                  name="urls.api"
-                  value={formData.urls?.api || ''}
-                  onChange={handleChange}
-                  className="input input-bordered w-full"
-                />
-              </div>
-            </div>
+            <UrlSections formData={formData} setFormData={setFormData} />
 
             {/* Application Details */}
             <div className="space-y-4">

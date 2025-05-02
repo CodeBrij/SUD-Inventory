@@ -1,5 +1,26 @@
 import mongoose from 'mongoose';
 
+
+const urlEntrySchema = new mongoose.Schema({
+  name: {
+    type: String,
+    trim: true
+  },
+  url: {
+    type: String,
+    // validate: {
+    //   validator: function(v) {
+    //     return /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i.test(v);
+    //   },
+    //   message: props => `${props.value} is not a valid URL!`
+    // }
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  }
+}, { _id: false }); 
+
 const inventorySchema = new mongoose.Schema({
   appId: {
     type: String,
@@ -9,11 +30,11 @@ const inventorySchema = new mongoose.Schema({
     type: String,
   },
   urls: {
-    externalProd: String,
-    externalUAT: String,
-    internalProd: String,
-    internalUAT: String,
-    api: String
+    externalProd: [urlEntrySchema],
+    externalUAT: [urlEntrySchema],
+    internalProd: [urlEntrySchema],
+    internalUAT: [urlEntrySchema],
+    api: [urlEntrySchema]
   },
   severity: {
     type: String,
