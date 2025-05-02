@@ -433,7 +433,7 @@ export default function InventoryManagement() {
             />
           )}
         </div>
-        
+
         {/* Security Filter */}
 
         <h3 className="text-lg font-semibold"> Security Filter</h3>
@@ -637,7 +637,20 @@ export default function InventoryManagement() {
                   {selectedColumns.developedBy && <td>{item.developedBy}</td>}
                   {selectedColumns.cloudProvider && <td>{item.cloudProvider}</td>}
                   {selectedColumns.manager && <td>{item.manager}</td>}
-                  {selectedColumns.vaptStatus && <td>{item.vaptStatus}</td>}
+                  {selectedColumns.vaptStatus && (
+                    <td>
+                      <div className="flex flex-wrap gap-1">
+                        {item.vaptStatus?.map((status, index) => (
+                          <span
+                            key={index}
+                            className="badge badge-info bg-blue-50 text-blue-800 border border-blue-200"
+                          >
+                            {status.year}-{status.status}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                  )}
                   {selectedColumns.endpointSecurity && <td>{item.endpointSecurity}</td>}
                   {selectedColumns.accessControl && <td>{item.accessControl}</td>}
                   {selectedColumns.socMonitoring && <td>{item.socMonitoring ? "Yes" : "No"}</td>}

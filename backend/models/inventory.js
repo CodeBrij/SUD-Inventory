@@ -86,10 +86,25 @@ const inventorySchema = new mongoose.Schema({
     type: String,
     enum: ['Business', 'IT']
   },
-  vaptStatus: {
-    type: String,
-    enum: ['VA', 'PT', 'API']
-  },
+  vaptStatus: [
+    {
+      year: {
+        type: Number,
+        validate: {
+          validator: (year) => year >= 2000 && year <= 2100,
+          message: 'Year must be between 2000 and 2100'
+        }
+      },
+      status: {
+        type: String,
+        enum: ['VA', 'PT', 'API'],
+      },
+      dateAdded: {
+        type: Date,
+        default: Date.now
+      }
+    }
+  ],
   riskAssessmentDate: {
     type: Date
   },

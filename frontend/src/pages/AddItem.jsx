@@ -30,7 +30,7 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
     endpointSecurity: "NA",
     accessControl: "NA",
     manager: "Business",
-    vaptStatus: "VA",
+    vaptStatus: [],
     riskAssessmentDate: "",
     smtpEnabled: false,
     businessOwner: "",
@@ -42,26 +42,6 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
     applicationDescription: ""
   });
   const [tempTechStack, setTempTechStack] = useState("");
-
-  // const handleChange = (e) => {
-  //   const { name, value, type, checked } = e.target;
-
-  //   if (name.includes('.')) {
-  //     const [parent, child] = name.split('.');
-  //     setFormData(prev => ({
-  //       ...prev,
-  //       [parent]: {
-  //         ...prev[parent],
-  //         [child]: value
-  //       }
-  //     }));
-  //   } else {
-  //     setFormData(prev => ({
-  //       ...prev,
-  //       [name]: type === 'checkbox' ? checked : value
-  //     }));
-  //   }
-  // };
 
 
   const handleChange = (e) => {
@@ -141,6 +121,94 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
   };
 
   if (!isOpen) return null;
+
+
+  // State for VAPT input
+  const [vaptInput, setVaptInput] = useState({
+    year: new Date().getFullYear(),
+    status: "VA"
+  });
+
+  // State to track which item is being edited
+  const [editingVaptIndex, setEditingVaptIndex] = useState(null);
+
+  const handleVaptChange = (e) => {
+    const { name, value } = e.target;
+    setVaptInput(prev => ({
+      ...prev,
+      [name]: name === 'year' ? parseInt(value) || new Date().getFullYear() : value
+    }));
+  };
+
+  const addVaptStatus = () => {
+    // Check if this year-status combination already exists
+    const exists = formData.vaptStatus.some(
+      item => item.year === vaptInput.year && item.status === vaptInput.status
+    );
+
+    if (exists) {
+      alert(`This VAPT status (${vaptInput.year} - ${vaptInput.status}) already exists!`);
+      return;
+    }
+
+    const newStatus = {
+      year: vaptInput.year,
+      status: vaptInput.status,
+      dateAdded: new Date().toISOString()
+    };
+
+    setFormData(prev => ({
+      ...prev,
+      vaptStatus: [...prev.vaptStatus, newStatus]
+    }));
+
+    // Reset input
+    setVaptInput({
+      year: new Date().getFullYear(),
+      status: "VA"
+    });
+  };
+
+  const editVaptStatus = (index) => {
+    const statusToEdit = formData.vaptStatus[index];
+    setVaptInput({
+      year: statusToEdit.year,
+      status: statusToEdit.status
+    });
+    setEditingVaptIndex(index);
+  };
+
+  const updateVaptStatus = () => {
+    if (editingVaptIndex === null) return;
+
+    const updatedStatus = {
+      year: vaptInput.year,
+      status: vaptInput.status,
+      dateAdded: formData.vaptStatus[editingVaptIndex].dateAdded // Keep original date
+    };
+
+    setFormData(prev => {
+      const updated = [...prev.vaptStatus];
+      updated[editingVaptIndex] = updatedStatus;
+      return { ...prev, vaptStatus: updated };
+    });
+
+    // Reset
+    setVaptInput({
+      year: new Date().getFullYear(),
+      status: "VA"
+    });
+    setEditingVaptIndex(null);
+  };
+
+  const removeVaptStatus = (index) => {
+    if (window.confirm("Are you sure you want to remove this VAPT status?")) {
+      setFormData(prev => ({
+        ...prev,
+        vaptStatus: prev.vaptStatus.filter((_, i) => i !== index)
+      }));
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-base-100 bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -463,21 +531,103 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                     <option value="IT">IT</option>
                   </select>
                 </div>
+
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">VAPT Status</span>
+                    <span className="label-text">VAPT Status (Year-wise)</span>
                   </label>
+
+                  <input
+                    type="number"
+                    name="year"
+                    value={vaptInput.year}
+                    onChange={handleVaptChange}
+                    placeholder="Year (e.g., 2023)"
+                    className="input input-bordered w-full mb-2"
+                    min="2000"
+                    max="2100"
+                  />
+
                   <select
-                    name="vaptStatus"
-                    value={formData.vaptStatus}
-                    onChange={handleChange}
-                    className="select select-bordered w-full"
+                    name="status"
+                    value={vaptInput.status}
+                    onChange={handleVaptChange}
+                    className="select select-bordered w-full mb-2"
                   >
                     <option value="VA">VA</option>
                     <option value="PT">PT</option>
                     <option value="API">API</option>
                   </select>
+
+                  {editingVaptIndex === null ? (
+                    <button
+                      type="button"
+                      onClick={addVaptStatus}
+                      className="btn btn-primary mb-4"
+                    >
+                      Add Status
+                    </button>
+                  ) : (
+                    <div className="flex space-x-2 mb-4">
+                      <button
+                        type="button"
+                        onClick={updateVaptStatus}
+                        className="btn btn-success flex-1"
+                      >
+                        Update
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setVaptInput({ year: new Date().getFullYear(), status: "VA" });
+                          setEditingVaptIndex(null);
+                        }}
+                        className="btn btn-error flex-1"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="mt-4">
+                    <h3 className="font-bold mb-2">VAPT Status History:</h3>
+                    {formData.vaptStatus.length === 0 ? (
+                      <p>No VAPT statuses added yet</p>
+                    ) : (
+                      <ul className="space-y-2">
+                        {formData.vaptStatus
+                          .sort((a, b) => b.year - a.year) // Sort by year descending
+                          .map((vapt, index) => (
+                            <li key={`${vapt.year}-${vapt.status}`} className="flex justify-between items-center p-2 bg-gray-100 rounded">
+                              <div>
+                                <span className="font-medium">{vapt.year}:</span> {vapt.status}
+                                <span className="text-sm text-gray-500 ml-2">
+                                  ({new Date(vapt.dateAdded).toLocaleDateString()})
+                                </span>
+                              </div>
+                              <div className="space-x-2">
+                                <button
+                                  type="button"
+                                  onClick={() => editVaptStatus(index)}
+                                  className="btn btn-xs btn-outline"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => removeVaptStatus(index)}
+                                  className="btn btn-xs btn-outline btn-error"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </li>
+                          ))}
+                      </ul>
+                    )}
+                  </div>
                 </div>
+
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text">Risk Assessment Date</span>

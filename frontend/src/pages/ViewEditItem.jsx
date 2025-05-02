@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { axiosInstance } from "../lib/axios";
 import { X, Save } from "lucide-react";
 import toast from "react-hot-toast";
+import VaptStatusManager from "./VaptStatusManager";
 
 export default function ViewEditItem({ itemId, isOpen, onClose, fetchInventory }) {
   const [originalData, setOriginalData] = useState(null);
@@ -60,6 +61,14 @@ export default function ViewEditItem({ itemId, isOpen, onClose, fetchInventory }
     }
   };
 
+
+  const handleVaptStatusChange = (updatedvaptStatus) => {
+    setFormData(prev => ({
+      ...prev,
+      vaptStatus: updatedvaptStatus
+    }));
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -112,6 +121,8 @@ export default function ViewEditItem({ itemId, isOpen, onClose, fetchInventory }
       setIsSaving(false);
     }
   };
+
+
 
 
   if (!isOpen) return null;
@@ -433,21 +444,13 @@ export default function ViewEditItem({ itemId, isOpen, onClose, fetchInventory }
                   <option value="IT">IT</option>
                 </select>
               </div>
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">VAPT Status</span>
-                </label>
-                <select
-                  name="vaptStatus"
-                  value={formData.vaptStatus || 'VA'}
-                  onChange={handleChange}
-                  className="select select-bordered w-full"
-                >
-                  <option value="VA">VA</option>
-                  <option value="PT">PT</option>
-                  <option value="API">API</option>
-                </select>
-              </div>
+
+
+              <VaptStatusManager
+                vaptStatus={formData?.vaptStatus || []}
+                onVaptStatusChange={handleVaptStatusChange}
+              />
+
               <div className="form-control">
                 <label className="label">
                   <span className="label-text">Risk Assessment Date</span>
