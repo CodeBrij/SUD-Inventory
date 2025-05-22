@@ -11,6 +11,13 @@ const ROLES = {
   USER: 'user'
 };
 
+const generateAppIdFromTimestamp = () => {
+  const now = new Date();
+  const timestamp = now.toISOString().replace(/[-:.TZ]/g, '').slice(0, 14); // YYYYMMDDHHMMSS
+  return `app_${timestamp}`;
+};
+
+
 
 InventoryRouter.post("/add",jwtAuth(), async (req, res) => {
     try {
@@ -21,18 +28,24 @@ InventoryRouter.post("/add",jwtAuth(), async (req, res) => {
         return res.status(401).json({ message: 'Unauthorized: No token provided' });
       }
 
-      const {appId} = req.body;
-      if (!appId) {
+      let appGeneratedId = generateAppIdFromTimestamp();
+      console.log("app id : ", appGeneratedId)
+
+      if (!appGeneratedId) {
         return res.status(400).json({ message: 'Application ID is required' });
       }
       console.log("request : " ,  req.body);
 
-      const existingInventory = await InventoryModel.findOne({ appId });
+      const existingInventory = await InventoryModel.findOne({ appGeneratedId });
       if (existingInventory) {
         return res.status(409).json({ message: "Inventory with this Application ID already exists" });
       }
 
-      const newInventory = new InventoryModel(req.body);
+      const newInventory = new InventoryModel({
+        ...req.body,
+        appId: appGeneratedId,
+      });
+      
       await newInventory.save();
 
       res.status(201).json({ message: 'Inventory added successfully', data: newInventory });

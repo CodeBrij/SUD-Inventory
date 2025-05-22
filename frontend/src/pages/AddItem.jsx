@@ -96,8 +96,8 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!formData.applicationName || !formData.appId) {
-      console.error("Application Name and Application ID are required.");
+    if (!formData.applicationName) {
+      console.error("Application Name are required.");
       return;
     }
     try {
@@ -126,8 +126,10 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
 
   // State for VAPT input
   const [vaptInput, setVaptInput] = useState({
-    year: new Date().getFullYear(),
-    status: "VA"
+    from: "",
+    to: "",
+    status: "VA",
+    result: "Scheduled"
   });
 
   // State to track which item is being edited
@@ -153,8 +155,7 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
     }
 
     const newStatus = {
-      year: vaptInput.year,
-      status: vaptInput.status,
+      ...vaptInput,
       dateAdded: new Date().toISOString()
     };
 
@@ -165,8 +166,10 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
 
     // Reset input
     setVaptInput({
-      year: new Date().getFullYear(),
-      status: "VA"
+      from: "",
+      to: "",
+      status: "VA",
+      result: "Scheduled"
     });
   };
 
@@ -235,19 +238,6 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Basic Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Application ID</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="appId"
-                    value={formData.appId}
-                    onChange={handleChange}
-                    className="input input-bordered w-full"
-                    required
-                  />
-                </div>
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text">Application Name</span>
@@ -533,22 +523,43 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                   </select>
                 </div>
 
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">VAPT Status (Year-wise)</span>
-                  </label>
+                <div className="form-control border border-gray-300 bg-white bg-opacity-90 rounded-lg p-4 shadow-sm">
 
+                  <label className="label">
+                    <span className="label-text">VAPT Status (Date Range)</span>
+                  </label>
+                  <hr className="w-[30%] border-t-2 border-gray-300 my-4 opacity-80" />
+
+                  {/* From Date */}
+                  <label className="label">
+                    <span className="label-text">From Date</span>
+                  </label>
                   <input
-                    type="number"
-                    name="year"
-                    value={vaptInput.year}
+                    type="date"
+                    name="from"
+                    value={vaptInput.from}
                     onChange={handleVaptChange}
-                    placeholder="Year (e.g., 2023)"
                     className="input input-bordered w-full mb-2"
-                    min="2000"
-                    max="2100"
                   />
 
+                  {/* To Date */}
+                  <label className="label">
+                    <span className="label-text">To Date</span>
+                  </label>
+                  <input
+                    type="date"
+                    name="to"
+                    value={vaptInput.to}
+                    onChange={handleVaptChange}
+                    className="input input-bordered w-full mb-2"
+                  />
+
+
+                  {/* Status Dropdown */}
+                  {/* VAPT Type Dropdown */}
+                  <label className="label">
+                    <span className="label-text">VAPT Type</span>
+                  </label>
                   <select
                     name="status"
                     value={vaptInput.status}
@@ -560,6 +571,24 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                     <option value="API">API</option>
                   </select>
 
+                  {/* Result Dropdown */}
+                  <label className="label">
+                    <span className="label-text">Result</span>
+                  </label>
+                  <select
+                    name="result"
+                    value={vaptInput.result}
+                    onChange={handleVaptChange}
+                    className="select select-bordered w-full mb-4"
+                  >
+                    <option value="Scheduled">Scheduled</option>
+                    <option value="InProgress">InProgress</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Failed">Failed</option>
+                  </select>
+
+
+                  {/* Add or Update Button */}
                   {editingVaptIndex === null ? (
                     <button
                       type="button"
@@ -580,7 +609,12 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                       <button
                         type="button"
                         onClick={() => {
-                          setVaptInput({ year: new Date().getFullYear(), status: "VA" });
+                          setVaptInput({
+                            from: "",
+                            to: "",
+                            status: "VA",
+                            result: "Scheduled"
+                          });
                           setEditingVaptIndex(null);
                         }}
                         className="btn btn-error flex-1"
@@ -590,6 +624,7 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                     </div>
                   )}
 
+                  {/* Status History */}
                   <div className="mt-4">
                     <h3 className="font-bold mb-2">VAPT Status History:</h3>
                     {formData.vaptStatus.length === 0 ? (
@@ -597,13 +632,13 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                     ) : (
                       <ul className="space-y-2">
                         {formData.vaptStatus
-                          .sort((a, b) => b.year - a.year) // Sort by year descending
+                          .sort((a, b) => new Date(b.from) - new Date(a.from)) // Sort by "from" descending
                           .map((vapt, index) => (
-                            <li key={`${vapt.year}-${vapt.status}`} className="flex justify-between items-center p-2 bg-gray-100 rounded">
+                            <li key={`${vapt.from}-${vapt.status}`} className="flex justify-between items-center p-2 bg-gray-100 rounded">
                               <div>
-                                <span className="font-medium">{vapt.year}:</span> {vapt.status}
+                                <span className="font-medium">{vapt.status}</span>
                                 <span className="text-sm text-gray-500 ml-2">
-                                  ({new Date(vapt.dateAdded).toLocaleDateString()})
+                                  ({new Date(vapt.from).toLocaleDateString()} → {new Date(vapt.to).toLocaleDateString()})
                                 </span>
                               </div>
                               <div className="space-x-2">
@@ -628,6 +663,7 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                     )}
                   </div>
                 </div>
+
 
                 <div className="form-control">
                   <label className="label">

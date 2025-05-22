@@ -109,23 +109,33 @@ const inventorySchema = new mongoose.Schema({
   },
   vaptStatus: [
     {
-      year: {
-        type: Number,
-        validate: {
-          validator: (year) => year >= 2000 && year <= 2100,
-          message: 'Year must be between 2000 and 2100'
-        }
-      },
       status: {
         type: String,
         enum: ['VA', 'PT', 'API'],
       },
+      from: {
+        type: Date,
+      },
+      to: {
+        type: Date,
+        validate: {
+          validator: function (value) {
+            return this.from < value;
+          },
+          message: 'To date must be after from date'
+        }
+      },
       dateAdded: {
         type: Date,
         default: Date.now
-      }
+      },
+      result: {
+        type: String,
+        enum: ['Scheduled', 'InProgress', 'Completed', 'Failed'],
+        default: 'Scheduled'
+      },
     }
-  ],
+  ],  
   riskAssessmentDate: {
     type: Date
   },
