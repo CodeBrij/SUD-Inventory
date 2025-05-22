@@ -43,7 +43,7 @@ const UrlSections = ({ formData, setFormData }) => {
     return (
         <div className="space-y-6">
             {urlCategories.map(category => (
-                <div key={category} className="p-4 border rounded-lg bg-gray-50">
+                <div key={category} className="p-4 border rounded-lg bg-white">
                     <div className="flex justify-between items-center mb-3">
                         <h3 className="font-medium text-gray-700 capitalize">
                             {category.replace(/([A-Z])/g, ' $1')}

@@ -240,8 +240,6 @@ export default function InventoryManagement() {
     }
   };
 
-
-
   const handleAdd = () => {
     setAddModalOpen(true);
   };
@@ -325,6 +323,7 @@ export default function InventoryManagement() {
 
 
 
+
   const filteredInventory = Array.isArray(inventory)
     ? inventory.filter((item) => {
       const matchesFilter = (filterValue, itemValue) => {
@@ -336,10 +335,27 @@ export default function InventoryManagement() {
       };
 
       const matchesBooleanFilter = (filterValue, itemValue) => {
-        if (!filterValue) return true;
+        if (filterValue === undefined || filterValue === null) return true;
         if (filterValue === "true") return itemValue === true;
         if (filterValue === "false") return itemValue === false;
         return true;
+      };
+
+      //  VAPT filter
+      const matchesVaptFilter = (yearFilter, vaptStatusFilter, vaptArray) => {
+        if (!vaptArray || vaptArray.length === 0) return false;
+
+        return vaptArray.some((status) => {
+          const fromYear = new Date(status.from).getFullYear().toString();
+          const toYear = new Date(status.to).getFullYear().toString();
+          const yearMatch =
+            !yearFilter || yearFilter.length === 0 || yearFilter.includes(fromYear) || yearFilter.includes(toYear);
+
+          const statusMatch =
+            !vaptStatusFilter || vaptStatusFilter.length === 0 || vaptStatusFilter.includes(status.status);
+
+          return yearMatch && statusMatch;
+        });
       };
 
       return (
@@ -351,17 +367,34 @@ export default function InventoryManagement() {
         matchesFilter(filters.developedBy, item.developedBy) &&
         matchesFilter(filters.cloudProvider, item.cloudProvider) &&
         matchesFilter(filters.manager, item.manager) &&
-        matchesFilter(filters.vaptStatus, item.vaptStatus) &&
+        matchesFilter(filters.serviceType, item.serviceType) &&
         matchesFilter(filters.endpointSecurity, item.endpointSecurity) &&
         matchesFilter(filters.accessControl, item.accessControl) &&
+        matchesFilter(filters.availabilityRating, item.availabilityRating) &&
+        matchesFilter(filters.criticalityRating, item.criticalityRating) &&
         matchesBooleanFilter(filters.socMonitoring, item.socMonitoring) &&
         matchesBooleanFilter(filters.smtpEnabled, item.smtpEnabled) &&
+        matchesVaptFilter(filters.year, filters.vaptStatus, item.vaptStatus) &&
         (!search || item.applicationName?.toLowerCase().includes(search.toLowerCase()))
       );
     })
     : [];
 
 
+  const getResultColorClass = (result) => {
+    switch (result) {
+      case "Completed":
+        return "badge-success";
+      case "InProgress":
+        return "badge-warning text-black";
+      case "Failed":
+        return "badge-error";
+      case "Scheduled":
+        return "badge-info";
+      default:
+        return "badge-ghost";
+    }
+  };
 
 
   // Dropwise selected Filter 
@@ -377,16 +410,24 @@ export default function InventoryManagement() {
     { name: 'publish', label: 'Publish', options: ['Internet', 'Non-Internet'] },
     { name: 'applicationType', label: 'Application Type', options: ['Business', 'Infra', 'Security'] },
     { name: 'developedBy', label: 'Developed By', options: ['In-House', 'OEM', 'Vendor'] },
+    { name: 'serviceType', label: 'Service Type', options: ['Core', 'Internal Use', 'Enabler'] },
   ];
+
+  const vaptFilterConfig = [
+    { name: 'year', label: 'Vapt Year', options: Array.from({ length: 20 }, (_, i) => (new Date().getFullYear() - i).toString()) },
+    { name: 'vaptStatus', label: 'VAPT Status', options: ['VA', 'PT', 'API'] },
+  ]
 
   const securityFilter = [
     // Security Filters
     { name: 'manager', label: 'Manager', options: ['Business', 'IT'], },
     { name: 'vaptStatus', label: 'VAPT Status', options: ['VA', 'PT', 'API'], },
-    { name: 'endpointSecurity', label: 'Endpoint Security', options: ['HIPS', 'EDR', 'NA'], },
+    { name: 'endpointSecurity', label: 'Endpoint Security', options: ['HIPS', 'EDR'], },
     { name: 'accessControl', label: 'Access Control', options: ['PAM', 'NA'], },
     { name: 'socMonitoring', label: 'SOC Monitoring', options: ['true', 'false'], },
-    { name: 'smtpEnabled', label: 'SMTP Enabled', options: ['true', 'false'], }
+    { name: 'smtpEnabled', label: 'SMTP Enabled', options: ['true', 'false'], },
+    { name: 'availabilityRating', label: 'Avalability Rating', options: [1, 2, 3, 4] },
+    { name: 'criticalityRating', label: 'Criticality Rating', options: [1, 2, 3, 4] },
   ]
 
 
@@ -432,6 +473,23 @@ export default function InventoryManagement() {
               onChange={handleFilterChange}
             />
           )}
+        </div>
+
+
+        <h3 className="text-lg font-semibold">VAPT Status</h3>
+        <div className="space-y-2">
+          {vaptFilterConfig.map((filter) => (
+            <CheckboxDropdown
+              key={filter.name}
+              name={filter.name}
+              label={filter.label}
+              options={filter.options}
+              selected={filters[filter.name] || []}
+              isOpen={openDropdown === filter.name}
+              onToggle={() => handleDropdownToggle(filter.name)}
+              onChange={handleFilterChange}
+            />
+          ))}
         </div>
 
         {/* Security Filter */}
@@ -639,18 +697,29 @@ export default function InventoryManagement() {
                   {selectedColumns.manager && <td>{item.manager}</td>}
                   {selectedColumns.vaptStatus && (
                     <td>
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-row gap-2">
                         {item.vaptStatus?.map((status, index) => (
-                          <span
+                          <div
                             key={index}
-                            className="badge badge-info bg-blue-50 text-blue-800 border border-blue-200"
+                            className="inline-flex items-center gap-2 p-2 bg-blue-50 border border-blue-100 rounded-md shadow-sm w-fit"
                           >
-                            {status.year}-{status.status}
-                          </span>
+                            <span className="badge badge-outline text-sm font-semibold">
+                              {status.status}
+                            </span>
+                            <span className="text-sm text-gray-600 w-fit">
+                              {new Date(status.from).toLocaleDateString()} → {new Date(status.to).toLocaleDateString()}
+                            </span>
+                            <span className={`badge text-xs ${getResultColorClass(status.result)}`}>
+                              {status.result}
+                            </span>
+                          </div>
                         ))}
                       </div>
+
+
                     </td>
                   )}
+
                   {selectedColumns.endpointSecurity && <td>{item.endpointSecurity}</td>}
                   {selectedColumns.accessControl && <td>{item.accessControl}</td>}
                   {selectedColumns.socMonitoring && <td>{item.socMonitoring ? "Yes" : "No"}</td>}
