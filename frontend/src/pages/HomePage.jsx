@@ -421,7 +421,6 @@ export default function InventoryManagement() {
   const securityFilter = [
     // Security Filters
     { name: 'manager', label: 'Manager', options: ['Business', 'IT'], },
-    { name: 'vaptStatus', label: 'VAPT Status', options: ['VA', 'PT', 'API'], },
     { name: 'endpointSecurity', label: 'Endpoint Security', options: ['HIPS', 'EDR'], },
     { name: 'accessControl', label: 'Access Control', options: ['PAM', 'NA'], },
     { name: 'socMonitoring', label: 'SOC Monitoring', options: ['true', 'false'], },
