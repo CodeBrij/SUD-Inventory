@@ -343,17 +343,16 @@ export default function InventoryManagement() {
 
       //  VAPT filter
       const matchesVaptFilter = (yearFilter, vaptStatusFilter, vaptArray) => {
-        if (!vaptArray || vaptArray.length === 0) return false;
-
+        if (!vaptArray || vaptArray.length === 0) {
+          return (!yearFilter || yearFilter.length === 0) && (!vaptStatusFilter || vaptStatusFilter.length === 0);
+        }
         return vaptArray.some((status) => {
           const fromYear = new Date(status.from).getFullYear().toString();
           const toYear = new Date(status.to).getFullYear().toString();
           const yearMatch =
             !yearFilter || yearFilter.length === 0 || yearFilter.includes(fromYear) || yearFilter.includes(toYear);
-
           const statusMatch =
             !vaptStatusFilter || vaptStatusFilter.length === 0 || vaptStatusFilter.includes(status.status);
-
           return yearMatch && statusMatch;
         });
       };

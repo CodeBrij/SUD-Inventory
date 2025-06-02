@@ -248,7 +248,12 @@ export default function ViewEditItem({ itemId, isOpen, onClose, fetchInventory }
             </div>
 
             {/* URLs */}
-            <UrlSections formData={formData} setFormData={setFormData} />
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold border-b pb-2">Urls Details</h3>
+              <div className="form-control">
+                <UrlSections formData={formData} setFormData={setFormData} />
+              </div>
+            </div>
 
             {/* Application Details */}
             <div className="space-y-4">
@@ -384,12 +389,6 @@ export default function ViewEditItem({ itemId, isOpen, onClose, fetchInventory }
                 </select>
               </div>
 
-
-              <VaptStatusManager
-                vaptStatus={formData?.vaptStatus || []}
-                onVaptStatusChange={handleVaptStatusChange}
-              />
-
               <div className="form-control">
                 <label className="label">
                   <span className="label-text">Risk Assessment Date</span>
@@ -403,6 +402,20 @@ export default function ViewEditItem({ itemId, isOpen, onClose, fetchInventory }
                 />
               </div>
             </div>
+
+            {/* Vapt Details */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold border-b pb-2">Vapt Status</h3>
+              <div className="form-control">
+
+                <VaptStatusManager
+                  vaptStatus={formData?.vaptStatus || []}
+                  onVaptStatusChange={handleVaptStatusChange}
+                />
+              </div>
+            </div>
+
+
 
             {/* Business Details */}
             <div className="space-y-4">
@@ -544,6 +557,6 @@ export default function ViewEditItem({ itemId, isOpen, onClose, fetchInventory }
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }

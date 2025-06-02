@@ -464,9 +464,11 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
 
           {/* Step 3: Security Details */}
           {currentStep === 3 && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Security Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold">Security Details</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* SOC Monitoring */}
                 <div className="form-control">
                   <label className="label cursor-pointer">
                     <span className="label-text">SOC Monitoring</span>
@@ -479,6 +481,8 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                     />
                   </label>
                 </div>
+
+                {/* Endpoint Security */}
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text">Endpoint Security</span>
@@ -494,6 +498,8 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                     <option value="EDR">EDR</option>
                   </select>
                 </div>
+
+                {/* Access Control */}
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text">Access Control</span>
@@ -508,6 +514,8 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                     <option value="PAM">PAM</option>
                   </select>
                 </div>
+
+                {/* Manager */}
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text">Manager</span>
@@ -523,12 +531,38 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                   </select>
                 </div>
 
-                <div className="form-control border border-gray-300 bg-white bg-opacity-90 rounded-lg p-4 shadow-sm">
-
+                {/* Risk Assessment Date */}
+                <div className="form-control">
                   <label className="label">
-                    <span className="label-text">VAPT Status (Date Range)</span>
+                    <span className="label-text">Risk Assessment Date</span>
                   </label>
-                  <hr className="w-[30%] border-t-2 border-gray-300 my-4 opacity-80" />
+                  <input
+                    type="date"
+                    name="riskAssessmentDate"
+                    value={formData.riskAssessmentDate}
+                    onChange={handleChange}
+                    className="input input-bordered w-full"
+                  />
+                </div>
+
+                {/* SMTP Enabled */}
+                <div className="form-control">
+                  <label className="label cursor-pointer">
+                    <span className="label-text">SMTP Enabled</span>
+                    <input
+                      type="checkbox"
+                      name="smtpEnabled"
+                      checked={formData.smtpEnabled}
+                      onChange={handleChange}
+                      className="checkbox"
+                    />
+                  </label>
+                </div>
+
+                {/* VAPT Status Section */}
+                <div className="form-control col-span-1 md:col-span-2 border border-gray-300 bg-white rounded-xl p-6 shadow">
+                  <h4 className="text-md font-semibold mb-2">VAPT Status (Date Range)</h4>
+                  <hr className="mb-4" />
 
                   {/* From Date */}
                   <label className="label">
@@ -539,7 +573,7 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                     name="from"
                     value={vaptInput.from}
                     onChange={handleVaptChange}
-                    className="input input-bordered w-full mb-2"
+                    className="input input-bordered w-full mb-3"
                   />
 
                   {/* To Date */}
@@ -551,12 +585,10 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                     name="to"
                     value={vaptInput.to}
                     onChange={handleVaptChange}
-                    className="input input-bordered w-full mb-2"
+                    className="input input-bordered w-full mb-3"
                   />
 
-
-                  {/* Status Dropdown */}
-                  {/* VAPT Type Dropdown */}
+                  {/* VAPT Type */}
                   <label className="label">
                     <span className="label-text">VAPT Type</span>
                   </label>
@@ -564,14 +596,14 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                     name="status"
                     value={vaptInput.status}
                     onChange={handleVaptChange}
-                    className="select select-bordered w-full mb-2"
+                    className="select select-bordered w-full mb-3"
                   >
                     <option value="VA">VA</option>
                     <option value="PT">PT</option>
                     <option value="API">API</option>
                   </select>
 
-                  {/* Result Dropdown */}
+                  {/* Result */}
                   <label className="label">
                     <span className="label-text">Result</span>
                   </label>
@@ -587,18 +619,17 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                     <option value="Failed">Failed</option>
                   </select>
 
-
                   {/* Add or Update Button */}
                   {editingVaptIndex === null ? (
                     <button
                       type="button"
                       onClick={addVaptStatus}
-                      className="btn btn-primary mb-4"
+                      className="btn btn-primary w-full mb-4"
                     >
                       Add Status
                     </button>
                   ) : (
-                    <div className="flex space-x-2 mb-4">
+                    <div className="flex gap-2 mb-4">
                       <button
                         type="button"
                         onClick={updateVaptStatus}
@@ -609,12 +640,7 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                       <button
                         type="button"
                         onClick={() => {
-                          setVaptInput({
-                            from: "",
-                            to: "",
-                            status: "VA",
-                            result: "Scheduled"
-                          });
+                          setVaptInput({ from: "", to: "", status: "VA", result: "Scheduled" });
                           setEditingVaptIndex(null);
                         }}
                         className="btn btn-error flex-1"
@@ -625,23 +651,26 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                   )}
 
                   {/* Status History */}
-                  <div className="mt-4">
-                    <h3 className="font-bold mb-2">VAPT Status History:</h3>
+                  <div>
+                    <h4 className="font-semibold mb-2">VAPT Status History:</h4>
                     {formData.vaptStatus.length === 0 ? (
-                      <p>No VAPT statuses added yet</p>
+                      <p className="text-sm text-gray-500">No VAPT statuses added yet.</p>
                     ) : (
                       <ul className="space-y-2">
                         {formData.vaptStatus
-                          .sort((a, b) => new Date(b.from) - new Date(a.from)) // Sort by "from" descending
+                          .sort((a, b) => new Date(b.from) - new Date(a.from))
                           .map((vapt, index) => (
-                            <li key={`${vapt.from}-${vapt.status}`} className="flex justify-between items-center p-2 bg-gray-100 rounded">
+                            <li
+                              key={`${vapt.from}-${vapt.status}`}
+                              className="flex justify-between items-center p-2 bg-gray-50 border rounded"
+                            >
                               <div>
                                 <span className="font-medium">{vapt.status}</span>
                                 <span className="text-sm text-gray-500 ml-2">
                                   ({new Date(vapt.from).toLocaleDateString()} → {new Date(vapt.to).toLocaleDateString()})
                                 </span>
                               </div>
-                              <div className="space-x-2">
+                              <div className="flex gap-1">
                                 <button
                                   type="button"
                                   onClick={() => editVaptStatus(index)}
@@ -663,44 +692,21 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                     )}
                   </div>
                 </div>
-
-
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Risk Assessment Date</span>
-                  </label>
-                  <input
-                    type="date"
-                    name="riskAssessmentDate"
-                    value={formData.riskAssessmentDate}
-                    onChange={handleChange}
-                    className="input input-bordered w-full"
-                  />
-                </div>
-                <div className="form-control">
-                  <label className="label cursor-pointer">
-                    <span className="label-text">SMTP Enabled</span>
-                    <input
-                      type="checkbox"
-                      name="smtpEnabled"
-                      checked={formData.smtpEnabled}
-                      onChange={handleChange}
-                      className="checkbox"
-                    />
-                  </label>
-                </div>
               </div>
             </div>
           )}
 
+
           {/* Step 4: Business Details */}
           {currentStep === 4 && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Business Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-6">
+              <h3 className="text-xl font-semibold text-gray-800">Business Details</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Business Owner */}
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">Business Owner</span>
+                    <span className="label-text font-medium">Business Owner</span>
                   </label>
                   <input
                     type="text"
@@ -710,9 +716,11 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                     className="input input-bordered w-full"
                   />
                 </div>
+
+                {/* Business Department Owner */}
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">Business Department Owner</span>
+                    <span className="label-text font-medium">Business Department Owner</span>
                   </label>
                   <input
                     type="text"
@@ -722,9 +730,11 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                     className="input input-bordered w-full"
                   />
                 </div>
+
+                {/* Service Type */}
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">Service Type</span>
+                    <span className="label-text font-medium">Service Type</span>
                   </label>
                   <input
                     type="text"
@@ -734,9 +744,11 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                     className="input input-bordered w-full"
                   />
                 </div>
+
+                {/* Service Window */}
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">Service Window</span>
+                    <span className="label-text font-medium">Service Window</span>
                   </label>
                   <input
                     type="text"
@@ -746,9 +758,11 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                     className="input input-bordered w-full"
                   />
                 </div>
+
+                {/* Business Severity */}
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">Business Severity</span>
+                    <span className="label-text font-medium">Business Severity</span>
                   </label>
                   <input
                     type="text"
@@ -759,11 +773,16 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                   />
                 </div>
 
-                <UrlSections formData={formData} setFormData={setFormData} />
-
+                {/* URLs Section - Modular Component */}
+                <div className="md:col-span-2">
+                  <div className="border border-gray-300 bg-white bg-opacity-90 rounded-lg p-4 shadow-sm">
+                    <UrlSections formData={formData} setFormData={setFormData} />
+                  </div>
+                </div>
               </div>
             </div>
           )}
+
 
           {/* Navigation Buttons */}
           <div className="flex justify-between mt-6">
