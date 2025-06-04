@@ -749,7 +749,6 @@ export default function InventoryManagement() {
                           <a href={url.url} target="_blank" rel="noopener noreferrer">
                             {url.name || url.url}
                           </a>
-                          {!url.isActive && <span className="inactive-badge">Inactive</span>}
                         </div>
                       ))}
                     </td>
@@ -763,7 +762,6 @@ export default function InventoryManagement() {
                           <a href={url.url} target="_blank" rel="noopener noreferrer">
                             {url.name || url.url}
                           </a>
-                          {!url.isActive && <span className="inactive-badge">Inactive</span>}
                         </div>
                       ))}
                     </td>
@@ -777,7 +775,6 @@ export default function InventoryManagement() {
                           <a href={url.url} target="_blank" rel="noopener noreferrer">
                             {url.name || url.url}
                           </a>
-                          {!url.isActive && <span className="inactive-badge">Inactive</span>}
                         </div>
                       ))}
                     </td>
@@ -791,7 +788,6 @@ export default function InventoryManagement() {
                           <a href={url.url} target="_blank" rel="noopener noreferrer">
                             {url.name || url.url}
                           </a>
-                          {!url.isActive && <span className="inactive-badge">Inactive</span>}
                         </div>
                       ))}
                     </td>
@@ -805,7 +801,6 @@ export default function InventoryManagement() {
                           <a href={url.url} target="_blank" rel="noopener noreferrer">
                             {url.name || url.url}
                           </a>
-                          {!url.isActive && <span className="inactive-badge">Inactive</span>}
                         </div>
                       ))}
                     </td>

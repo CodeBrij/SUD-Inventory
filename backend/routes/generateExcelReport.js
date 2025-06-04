@@ -8,59 +8,7 @@ import sendEmailWithAttachment from "../middleware/sendEmailWithAttachment.js";
 
 const GenerateExcelReportRouter = express.Router();
 // const upload = multer({ dest: "uploads/" }); // Temporary storage
-const upload = multer(); // Temporary storage
-
-// // GenerateExcelReportRouter.post("/send-report", jwtAuth(), upload.single('file'), async (req, res) => {
-// //     const userId = req.userId;
-
-// //     if (!userId) {
-// //         return res.status(401).json({ message: 'Unauthorized: No token provided' });
-// //     }
-
-// //     try {
-// //         const { mail, message } = req.body;
-// //         const file = req.file;
-
-// //         if (!file) {
-// //             return res.status(400).json({ message: 'No file uploaded' });
-// //         }
-
-// //         const results = [];
-// //         const readStream = fs.createReadStream(file.path);
-
-// //         readStream
-// //             .pipe(csv())
-// //             .on('data', (data) => results.push(data))
-// //             .on('end', async () => {
-// //                 // Generate Excel from CSV data
-// //                 const workbook = XLSX.utils.book_new();
-// //                 const worksheet = XLSX.utils.json_to_sheet(results);
-// //                 XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory Report");
-
-// //                 const filePath = `inventory_report_${Date.now()}.xlsx`;
-// //                 XLSX.writeFile(workbook, filePath);
-
-// //                 // Send the file as an email attachment
-// //                 await sendEmailWithAttachment(mail, message, filePath);
-
-// //                 // Clean up temporary files
-// //                 fs.unlinkSync(file.path);     // Delete uploaded CSV
-// //                 fs.unlinkSync(filePath);      // Delete generated Excel
-
-// //                 res.status(200).json({ message: 'Report generated and sent successfully', filePath });
-// //             })
-// //             .on('error', (error) => {
-// //                 console.error('Error parsing CSV:', error);
-// //                 res.status(500).json({ message: 'Error processing CSV file', error: error.message });
-// //             });
-
-// //     } catch (error) {
-// //         console.error('Error generating report:', error);
-// //         res.status(500).json({ message: 'Internal server error', error: error.message });
-// //     }
-// // });
-
-// // export default GenerateExcelReportRouter;
+const upload = multer(); 
 
 GenerateExcelReportRouter.post("/send-report", jwtAuth(), upload.none(), async (req, res) => {
     const userId = req.user.id;
@@ -97,13 +45,38 @@ GenerateExcelReportRouter.post("/send-report", jwtAuth(), upload.none(), async (
             // Loop through each key in the item and add it to formattedItem
             Object.keys(item).forEach((key) => {
                 if (key === 'urls') {
-                    // Handling nested URLs object
-                    formattedItem["External Prod"] = item.urls.externalProd || "";
-                    formattedItem["External UAT"] = item.urls.externalUAT || "";
-                    formattedItem["Internal Prod"] = item.urls.internalProd || "";
-                    formattedItem["Internal UAT"] = item.urls.internalUAT || "";
-                    formattedItem["API"] = item.urls.api || "";
-                } else if (key === 'technologyStack') {
+                    // // Handling nested URLs object
+                    // formattedItem["External Prod"] = item.urls.externalProd || "";
+                    // formattedItem["External UAT"] = item.urls.externalUAT || "";
+                    // formattedItem["Internal Prod"] = item.urls.internalProd || "";
+                    // formattedItem["Internal UAT"] = item.urls.internalUAT || "";
+                    // formattedItem["API"] = item.urls.api || "";
+
+
+                const formatUrls = (entries) =>
+                (entries || [])
+                    .map(entry => `${entry.name || 'Unnamed'}: ${entry.url || 'N/A'}`)
+                    .join('\n');
+
+                    formattedItem["External Prod"] = formatUrls(item.urls.externalProd);
+                    formattedItem["External UAT"] = formatUrls(item.urls.externalUAT);
+                    formattedItem["Internal Prod"] = formatUrls(item.urls.internalProd);
+                    formattedItem["Internal UAT"] = formatUrls(item.urls.internalUAT);
+                    formattedItem["API URLs"] = formatUrls(item.urls.api);
+                } else if (key === 'vaptStatus') {
+                    // Format each VAPT entry into readable summary
+                    const formatVapt = (entries) =>
+                        (entries || [])
+                            .map(entry => {
+                                const from = entry.from ? new Date(entry.from).toLocaleDateString("en-US") : "N/A";
+                                const to = entry.to ? new Date(entry.to).toLocaleDateString("en-US") : "N/A";
+                                return `${entry.status || 'N/A'} (${from} → ${to}) = ${entry.result || 'Scheduled'}`;
+                            })
+                            .join('\n');
+                    
+                    formattedItem["VAPT Status"] = formatVapt(item.vaptStatus);
+                } 
+                else if (key === 'technologyStack') {
                     // Handle array fields (e.g., technologyStack)
                     formattedItem["Technology Stack Used"] = item[key].join(", ");
                 } else if (key === 'goLiveDate' || key === 'riskAssessmentDate') {
@@ -135,8 +108,14 @@ GenerateExcelReportRouter.post("/send-report", jwtAuth(), upload.none(), async (
 
         // Adjust column width based on content
         worksheet['!cols'] = Object.keys(formattedData[0]).map(key => {
+             if (key === 'VAPT Status') {
+                return { wch: 50 }; // Fixed width (adjust as needed)
+            }
             return {
-                wch: Math.max(...formattedData.map(row => (row[key] ? row[key].toString().length : 5)), key.length) + 1
+                wch: Math.max(
+                    ...formattedData.map(row => (row[key] ? row[key].toString().length : 5)),
+                    key.length
+                ) + 1
             };
         });
 

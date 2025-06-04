@@ -8,17 +8,13 @@ const urlEntrySchema = new mongoose.Schema({
   },
   url: {
     type: String,
-    // validate: {
-    //   validator: function(v) {
-    //     return /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i.test(v);
-    //   },
-    //   message: props => `${props.value} is not a valid URL!`
-    // }
+    validate: {
+      validator: function(v) {
+        return /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i.test(v);
+      },
+      message: props => `${props.value} is not a valid URL!`
+    }
   },
-  isActive: {
-    type: Boolean,
-    default: true
-  }
 }, { _id: false }); 
 
 const inventorySchema = new mongoose.Schema({
