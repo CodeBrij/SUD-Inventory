@@ -144,76 +144,95 @@ export default function InventoryManagement() {
   };
 
   const handleDownload = () => {
-    const visibleData = getVisibleColumnsData(filteredInventory);
+  const visibleData = getVisibleColumnsData(filteredInventory);
 
-    // Create workbook
-    const wb = XLSX.utils.book_new();
+  const wb = XLSX.utils.book_new();
+  const headers = [];
+  const dataRows = [];
 
-    // Prepare data for worksheet
-    const headers = [];
-    const dataRows = [];
+  // Build headers
+  Object.keys(selectedColumns).forEach(col => {
+    if (col !== 'urls' && selectedColumns[col]) {
+      headers.push(col.replace(/([A-Z])/g, ' $1')); // Human-readable headers
+    }
+  });
 
-    // Add regular columns
+  if (selectedColumns.urls) {
+    Object.keys(selectedColumns.urls).forEach(urlCol => {
+      if (selectedColumns.urls[urlCol]) {
+        headers.push(`URL ${urlCol}`);
+      }
+    });
+  }
+
+  const formatUrls = (entries) =>
+    (entries || [])
+      .map(entry => `${entry.name || 'Unnamed'}: ${entry.url || 'N/A'}`)
+      .join('\n');
+
+  const formatVapt = (entries) =>
+    (entries || [])
+      .map(entry => {
+        const from = entry.from ? new Date(entry.from).toLocaleDateString("en-US") : "N/A";
+        const to = entry.to ? new Date(entry.to).toLocaleDateString("en-US") : "N/A";
+        return `${entry.status || 'N/A'} (${from} → ${to}) = ${entry.result || 'Scheduled'}`;
+      })
+      .join('\n');
+
+  visibleData.forEach(item => {
+    const row = [];
+
+    // Regular columns
     Object.keys(selectedColumns).forEach(col => {
       if (col !== 'urls' && selectedColumns[col]) {
-        headers.push(col);
+        const value = item[col];
+
+        if (col === 'vaptStatus') {
+          row.push(formatVapt(value));
+        } else if (col === 'technologyStack' && Array.isArray(value)) {
+          row.push(value.join(', '));
+        } else if ((col === 'goLiveDate' || col === 'riskAssessmentDate') && value) {
+          row.push(new Date(value).toLocaleDateString("en-US"));
+        } else if (col === 'smtpEnabled') {
+          row.push(value ? "Enabled" : "Not Applicable");
+        } else if (typeof value === 'object') {
+          row.push(JSON.stringify(value)); // Fallback
+        } else {
+          row.push(value ?? '');
+        }
       }
     });
 
-    // Add URL columns
-    if (selectedColumns.urls) {
+    // URL columns
+    if (selectedColumns.urls && item.urls) {
       Object.keys(selectedColumns.urls).forEach(urlCol => {
         if (selectedColumns.urls[urlCol]) {
-          headers.push(`URL ${urlCol}`);
+          row.push(formatUrls(item.urls[urlCol]));
         }
       });
     }
 
-    // Add data rows
-    visibleData.forEach(item => {
-      const row = [];
+    dataRows.push(row);
+  });
 
-      // Add regular columns
-      Object.keys(selectedColumns).forEach(col => {
-        if (col !== 'urls' && selectedColumns[col]) {
-          row.push(item[col] || '');
-        }
-      });
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...dataRows]);
 
-      // Add URL columns
-      if (selectedColumns.urls && item.urls) {
-        Object.keys(selectedColumns.urls).forEach(urlCol => {
-          if (selectedColumns.urls[urlCol]) {
-            row.push(item.urls[urlCol] || '');
-          }
-        });
-      }
+  // Style headers (bold + center)
+  if (!ws['!cols']) ws['!cols'] = [];
+  headers.forEach((_, i) => {
+    ws['!cols'][i] = { wch: 30 }; // Adjust width
+    const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
+    if (!ws[cellRef]) ws[cellRef] = {};
+    ws[cellRef].s = {
+      font: { bold: true },
+      alignment: { horizontal: "center", vertical: "center" }
+    };
+  });
 
-      dataRows.push(row);
-    });
+  XLSX.utils.book_append_sheet(wb, ws, `Inventory Data`);
+  XLSX.writeFile(wb, `inventory_data_${Date.now()}.xlsx`, { bookType: 'xlsx', cellStyles: true });
+};
 
-    // Create worksheet with headers
-    const ws = XLSX.utils.aoa_to_sheet([headers, ...dataRows]);
-
-    // Style headers (bold)
-    if (ws['!cols'] === undefined) ws['!cols'] = [];
-    headers.forEach((_, i) => {
-      ws['!cols'][i] = { wch: 24 }; // Set column width
-      const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
-      if (!ws[cellRef]) ws[cellRef] = {};
-      if (!ws[cellRef].s) ws[cellRef].s = {};
-      ws[cellRef].s = {
-        font: { bold: true },
-        alignment: { horizontal: "center", vertical: "center" }
-      };
-    });
-
-    // Add worksheet to workbook
-    XLSX.utils.book_append_sheet(wb, ws, `Inventory Data`);
-
-    // Download
-    XLSX.writeFile(wb, `inventory_data_${Date.now()}.xlsx`, { bookType: 'xlsx', cellStyles: true });
-  };
 
   const handleView = (item) => {
     setCurrentViewItemId(item._id);
