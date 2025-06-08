@@ -393,7 +393,7 @@ export default function InventoryManagement() {
         matchesBooleanFilter(filters.socMonitoring, item.socMonitoring) &&
         matchesBooleanFilter(filters.smtpEnabled, item.smtpEnabled) &&
         matchesVaptFilter(filters.year, filters.vaptStatus, item.vaptStatus) &&
-        (!search || item.applicationName?.toLowerCase().includes(search.toLowerCase()))
+        (!search || item.applicationName?.toLowerCase().includes(search.toLowerCase()) || item.appId?.toLowerCase().includes(search.toLowerCase()))
       );
     })
     : [];
