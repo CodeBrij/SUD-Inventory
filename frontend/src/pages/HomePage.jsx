@@ -17,6 +17,8 @@ import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import * as XLSX from 'xlsx';
 import { useAuthStore } from "../store/useAuthStore";
+import Sidebar from "./Sidebar";
+import SendEmailModal from "./SendEmailModal";
 import CheckboxDropdown from "./CheckboxDropdown";
 
 export default function InventoryManagement() {
@@ -144,76 +146,95 @@ export default function InventoryManagement() {
   };
 
   const handleDownload = () => {
-    const visibleData = getVisibleColumnsData(filteredInventory);
+  const visibleData = getVisibleColumnsData(filteredInventory);
 
-    // Create workbook
-    const wb = XLSX.utils.book_new();
+  const wb = XLSX.utils.book_new();
+  const headers = [];
+  const dataRows = [];
 
-    // Prepare data for worksheet
-    const headers = [];
-    const dataRows = [];
+  // Build headers
+  Object.keys(selectedColumns).forEach(col => {
+    if (col !== 'urls' && selectedColumns[col]) {
+      headers.push(col.replace(/([A-Z])/g, ' $1')); // Human-readable headers
+    }
+  });
 
-    // Add regular columns
+  if (selectedColumns.urls) {
+    Object.keys(selectedColumns.urls).forEach(urlCol => {
+      if (selectedColumns.urls[urlCol]) {
+        headers.push(`URL ${urlCol}`);
+      }
+    });
+  }
+
+  const formatUrls = (entries) =>
+    (entries || [])
+      .map(entry => `${entry.name || 'Unnamed'}: ${entry.url || 'N/A'}`)
+      .join('\n');
+
+  const formatVapt = (entries) =>
+    (entries || [])
+      .map(entry => {
+        const from = entry.from ? new Date(entry.from).toLocaleDateString("en-US") : "N/A";
+        const to = entry.to ? new Date(entry.to).toLocaleDateString("en-US") : "N/A";
+        return `${entry.status || 'N/A'} (${from} → ${to}) = ${entry.result || 'Scheduled'}`;
+      })
+      .join('\n');
+
+  visibleData.forEach(item => {
+    const row = [];
+
+    // Regular columns
     Object.keys(selectedColumns).forEach(col => {
       if (col !== 'urls' && selectedColumns[col]) {
-        headers.push(col);
+        const value = item[col];
+
+        if (col === 'vaptStatus') {
+          row.push(formatVapt(value));
+        } else if (col === 'technologyStack' && Array.isArray(value)) {
+          row.push(value.join(', '));
+        } else if ((col === 'goLiveDate' || col === 'riskAssessmentDate') && value) {
+          row.push(new Date(value).toLocaleDateString("en-US"));
+        } else if (col === 'smtpEnabled') {
+          row.push(value ? "Enabled" : "Not Applicable");
+        } else if (typeof value === 'object') {
+          row.push(JSON.stringify(value)); // Fallback
+        } else {
+          row.push(value ?? '');
+        }
       }
     });
 
-    // Add URL columns
-    if (selectedColumns.urls) {
+    // URL columns
+    if (selectedColumns.urls && item.urls) {
       Object.keys(selectedColumns.urls).forEach(urlCol => {
         if (selectedColumns.urls[urlCol]) {
-          headers.push(`URL ${urlCol}`);
+          row.push(formatUrls(item.urls[urlCol]));
         }
       });
     }
 
-    // Add data rows
-    visibleData.forEach(item => {
-      const row = [];
+    dataRows.push(row);
+  });
 
-      // Add regular columns
-      Object.keys(selectedColumns).forEach(col => {
-        if (col !== 'urls' && selectedColumns[col]) {
-          row.push(item[col] || '');
-        }
-      });
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...dataRows]);
 
-      // Add URL columns
-      if (selectedColumns.urls && item.urls) {
-        Object.keys(selectedColumns.urls).forEach(urlCol => {
-          if (selectedColumns.urls[urlCol]) {
-            row.push(item.urls[urlCol] || '');
-          }
-        });
-      }
+  // Style headers (bold + center)
+  if (!ws['!cols']) ws['!cols'] = [];
+  headers.forEach((_, i) => {
+    ws['!cols'][i] = { wch: 30 }; // Adjust width
+    const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
+    if (!ws[cellRef]) ws[cellRef] = {};
+    ws[cellRef].s = {
+      font: { bold: true },
+      alignment: { horizontal: "center", vertical: "center" }
+    };
+  });
 
-      dataRows.push(row);
-    });
+  XLSX.utils.book_append_sheet(wb, ws, `Inventory Data`);
+  XLSX.writeFile(wb, `inventory_data_${Date.now()}.xlsx`, { bookType: 'xlsx', cellStyles: true });
+};
 
-    // Create worksheet with headers
-    const ws = XLSX.utils.aoa_to_sheet([headers, ...dataRows]);
-
-    // Style headers (bold)
-    if (ws['!cols'] === undefined) ws['!cols'] = [];
-    headers.forEach((_, i) => {
-      ws['!cols'][i] = { wch: 24 }; // Set column width
-      const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
-      if (!ws[cellRef]) ws[cellRef] = {};
-      if (!ws[cellRef].s) ws[cellRef].s = {};
-      ws[cellRef].s = {
-        font: { bold: true },
-        alignment: { horizontal: "center", vertical: "center" }
-      };
-    });
-
-    // Add worksheet to workbook
-    XLSX.utils.book_append_sheet(wb, ws, `Inventory Data`);
-
-    // Download
-    XLSX.writeFile(wb, `inventory_data_${Date.now()}.xlsx`, { bookType: 'xlsx', cellStyles: true });
-  };
 
   const handleView = (item) => {
     setCurrentViewItemId(item._id);
@@ -374,7 +395,7 @@ export default function InventoryManagement() {
         matchesBooleanFilter(filters.socMonitoring, item.socMonitoring) &&
         matchesBooleanFilter(filters.smtpEnabled, item.smtpEnabled) &&
         matchesVaptFilter(filters.year, filters.vaptStatus, item.vaptStatus) &&
-        (!search || item.applicationName?.toLowerCase().includes(search.toLowerCase()))
+        (!search || item.applicationName?.toLowerCase().includes(search.toLowerCase()) || item.appId?.toLowerCase().includes(search.toLowerCase()))
       );
     })
     : [];
@@ -432,100 +453,23 @@ export default function InventoryManagement() {
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
-      <div
-        className={`fixed inset-y-0 left-0 z-50 bg-white shadow-lg w-64 p-4 space-y-4 transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          } md:translate-x-0 transition-transform duration-300 overflow-y-auto`}
-      >
-        <button
-          onClick={() => setSidebarOpen(false)}
-          className="btn btn-sm btn-circle absolute top-2 right-2 md:hidden"
-        >
-          ✕
-        </button>
-
-        {/* Filter  */}
-
-        <h3 className="text-lg font-semibold"> Filters</h3>
-        <div className="space-y-2">
-          {filterConfigs.map((filter) => (
-            <CheckboxDropdown
-              key={filter.name}
-              name={filter.name}
-              label={filter.label}
-              options={filter.options}
-              selected={filters[filter.name] || []}
-              isOpen={openDropdown === filter.name}
-              onToggle={() => handleDropdownToggle(filter.name)}
-              onChange={handleFilterChange}
-            />
-          ))}
-
-          {filters.deployment?.includes("Cloud") && (
-            <CheckboxDropdown
-              name="cloudProvider"
-              label="Cloud Provider"
-              options={['Azure', 'AWS', 'GCP']}
-              selected={filters.cloudProvider || []}
-              isOpen={openDropdown === 'cloudProvider'}
-              onToggle={() => handleDropdownToggle('cloudProvider')}
-              onChange={handleFilterChange}
-            />
-          )}
-        </div>
-
-
-        <h3 className="text-lg font-semibold">VAPT Status</h3>
-        <div className="space-y-2">
-          {vaptFilterConfig.map((filter) => (
-            <CheckboxDropdown
-              key={filter.name}
-              name={filter.name}
-              label={filter.label}
-              options={filter.options}
-              selected={filters[filter.name] || []}
-              isOpen={openDropdown === filter.name}
-              onToggle={() => handleDropdownToggle(filter.name)}
-              onChange={handleFilterChange}
-            />
-          ))}
-        </div>
-
-        {/* Security Filter */}
-
-        <h3 className="text-lg font-semibold"> Security Filter</h3>
-        <div className="space-y-2">
-          {securityFilter.map((filter) => (
-            <CheckboxDropdown
-              key={filter.name}
-              name={filter.name}
-              label={filter.label}
-              options={filter.options}
-              selected={filters[filter.name] || []}
-              isOpen={openDropdown === filter.name}
-              onToggle={() => handleDropdownToggle(filter.name)}
-              onChange={handleFilterChange}
-            />
-          ))}
-        </div>
-
-        <button
-          onClick={() => setFilters({})}
-          className="btn btn-outline w-full mt-4"
-        >
-          Clear All Filters
-        </button>
-        <button
-          onClick={handleLogout}
-          className="btn btn-outline w-full mt-0 hover:bg-red-600 hover:text-white"
-        >
-          Logout
-        </button>
-      </div>
+      <Sidebar
+        filters={filters}
+        setFilters={setFilters}
+        openDropdown={openDropdown}
+        handleDropdownToggle={handleDropdownToggle}
+        filterConfigs={filterConfigs}
+        vaptFilterConfig={vaptFilterConfig}
+        securityFilter={securityFilter}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        handleLogout={handleLogout}
+      />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col p-6 md:ml-64 h-screen overflow-hidden">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-xl font-bold mb-5">
+          <h1 className="text-xl font-bold mb-3">
             SUD Software Inventory Manager
           </h1>
           {authUser.role === "admin" && <button
@@ -547,7 +491,7 @@ export default function InventoryManagement() {
           <div className="flex gap-2 mb-4 w-full">
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="Search by Application ID or Name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="input input-bordered w-full"
@@ -749,7 +693,6 @@ export default function InventoryManagement() {
                           <a href={url.url} target="_blank" rel="noopener noreferrer">
                             {url.name || url.url}
                           </a>
-                          {!url.isActive && <span className="inactive-badge">Inactive</span>}
                         </div>
                       ))}
                     </td>
@@ -763,7 +706,6 @@ export default function InventoryManagement() {
                           <a href={url.url} target="_blank" rel="noopener noreferrer">
                             {url.name || url.url}
                           </a>
-                          {!url.isActive && <span className="inactive-badge">Inactive</span>}
                         </div>
                       ))}
                     </td>
@@ -777,7 +719,6 @@ export default function InventoryManagement() {
                           <a href={url.url} target="_blank" rel="noopener noreferrer">
                             {url.name || url.url}
                           </a>
-                          {!url.isActive && <span className="inactive-badge">Inactive</span>}
                         </div>
                       ))}
                     </td>
@@ -791,7 +732,6 @@ export default function InventoryManagement() {
                           <a href={url.url} target="_blank" rel="noopener noreferrer">
                             {url.name || url.url}
                           </a>
-                          {!url.isActive && <span className="inactive-badge">Inactive</span>}
                         </div>
                       ))}
                     </td>
@@ -805,7 +745,6 @@ export default function InventoryManagement() {
                           <a href={url.url} target="_blank" rel="noopener noreferrer">
                             {url.name || url.url}
                           </a>
-                          {!url.isActive && <span className="inactive-badge">Inactive</span>}
                         </div>
                       ))}
                     </td>
@@ -837,7 +776,7 @@ export default function InventoryManagement() {
 
       {/* Modals */}
       {isDeleteModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
             <h2 className="text-lg font-semibold mb-4">Confirm Deletion</h2>
             <p>Do you want to delete the item with ID: {deleteItemAppId}?</p>
@@ -876,84 +815,16 @@ export default function InventoryManagement() {
         />
       )}
 
-      {isSendEmailModalOpen && (
-        <div className="fixed inset-0 bg-white bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-[450px]">
-            <div className="flex justify-between items-center mb-6 border-b pb-3">
-              <h2 className="text-xl font-semibold">SUD Life Insurance - Send Email</h2>
-              <button
-                onClick={() => setIsSendEmailModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 flex items-start">
-              <div className="mr-3 text-blue-500">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
-              </div>
-              <p className="text-sm text-blue-800">
-                Send an email notification to the specified user. The system will deliver the message to the recipient's inbox.
-              </p>
-            </div>
-
-            <div className="mb-5">
-              <label className="block text-gray-700 mb-2">Email</label>
-              <input
-                type="email"
-                value={receiverMail}
-                onChange={(e) => setReceiverMail(e.target.value)}
-                placeholder="Enter email address"
-                className="input input-bordered w-full"
-              />
-            </div>
-            <div className="form-control mb-5">
-              <label className="label mb-2">
-                <span className="label-text">Message</span>
-              </label>
-              <textarea
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Enter your message"
-                className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows="4"
-              />
-            </div>
-
-            <div className="flex justify-end gap-4 mt-6">
-              <button
-                onClick={() => {
-                  setIsSendEmailModalOpen(false);
-                  setReceiverMail("");
-                  setMessage("");
-                }}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-100"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleMailSend}
-                disabled={!receiverMail || !message}
-                className={`bg-blue-500 text-white px-6 py-2 rounded flex items-center ${!receiverMail || !message
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:bg-blue-600"
-                  }`}
-              >
-                {isSendingMail && (
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                )}
-                Send Email
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <SendEmailModal
+          isOpen={isSendEmailModalOpen}
+          receiverMail={receiverMail}
+          message={message}
+          isSendingMail={isSendingMail}
+          onClose={() => setIsSendEmailModalOpen(false)}
+          onChangeMail={e => setReceiverMail(e.target.value)}
+          onChangeMessage={e => setMessage(e.target.value)}
+          onSend={handleMailSend}
+        />
 
 
     </div>
