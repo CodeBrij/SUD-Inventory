@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import LoginPage from './pages/LoginPage';
-import SignUpPage from './pages/SignupPage';
+import LoginPage from './pages/LoginPage.jsx';
+import SignUpPage from './pages/SignupPage.jsx';
 import './App.css';
-import InventoryManagement from './pages/HomePage';
+import InventoryManagement from './pages/HomePage.jsx';
 import { useAuthStore } from './store/useAuthStore';
 import { Loader } from 'lucide-react';
-import SetupPassword from './pages/SetupPassword';
-import AddUsers from './pages/AddUsers';
+import SetupPassword from './pages/SetupPassword.jsx';
+import AddUsers from './pages/AddUsers.jsx';
 
 function App() {
   const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
