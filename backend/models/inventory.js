@@ -100,9 +100,21 @@ const inventorySchema = new mongoose.Schema({
     enum: ['PAM', 'NA']
   },
   manager: {
-    type: String,
-    enum: ['Business', 'IT']
+  type: String,
+  enum: ['Business', 'IT', 'BOTH'],
   },
+  // Business fields
+  businessOwner: { type: String },
+  businessDeptOwner: { type: String },
+  serviceType: { type: String },
+  serviceWindow: { type: String },
+  businessSeverity: { type: String },
+  // IT fields (same structure for IT)
+  itOwner: { type: String },
+  itDeptOwner: { type: String },
+  itServiceType: { type: String },
+  itServiceWindow: { type: String },
+  itBusinessSeverity: { type: String },
   vaptStatus: [
     {
       status: {
@@ -139,21 +151,21 @@ const inventorySchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  businessOwner: {
-    type: String,
-  },
-  businessDeptOwner: {
-    type: String,
-  },
-  serviceType: {
-    type: String,
-  },
-  serviceWindow: {
-    type: String,
-  },
-  businessSeverity: {
-    type: String,
-  },
+  // businessOwner: {
+  //   type: String,
+  // },
+  // businessDeptOwner: {
+  //   type: String,
+  // },
+  // serviceType: {
+  //   type: String,
+  // },
+  // serviceWindow: {
+  //   type: String,
+  // },
+  // businessSeverity: {
+  //   type: String,
+  // },
   technologyStack: {
     type: [String],
   },

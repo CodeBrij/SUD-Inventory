@@ -34,11 +34,16 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
     vaptStatus: [],
     riskAssessmentDate: "",
     smtpEnabled: false,
-    businessOwner: "",
-    businessDeptOwner: "",
-    serviceType: "",
-    serviceWindow: "",
-    businessSeverity: "",
+    businessOwner: '',
+    businessDeptOwner: '',
+    serviceType: '',
+    serviceWindow: '',
+    businessSeverity: '',
+    itOwner: '',
+    itDeptOwner: '',
+    itServiceType: '',
+    itServiceWindow: '',
+    itBusinessSeverity: '',
     technologyStack: [],
     applicationDescription: ""
   });
@@ -482,6 +487,21 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                   </label>
                 </div>
 
+
+                {/* SMTP Enabled */}
+                <div className="form-control">
+                  <label className="label cursor-pointer">
+                    <span className="label-text">SMTP Enabled</span>
+                    <input
+                      type="checkbox"
+                      name="smtpEnabled"
+                      checked={formData.smtpEnabled}
+                      onChange={handleChange}
+                      className="checkbox"
+                    />
+                  </label>
+                </div>
+
                 {/* Endpoint Security */}
                 <div className="form-control">
                   <label className="label">
@@ -528,6 +548,7 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                   >
                     <option value="Business">Business</option>
                     <option value="IT">IT</option>
+                    <option value="BOTH">BOTH</option>
                   </select>
                 </div>
 
@@ -543,20 +564,6 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
                     onChange={handleChange}
                     className="input input-bordered w-full"
                   />
-                </div>
-
-                {/* SMTP Enabled */}
-                <div className="form-control">
-                  <label className="label cursor-pointer">
-                    <span className="label-text">SMTP Enabled</span>
-                    <input
-                      type="checkbox"
-                      name="smtpEnabled"
-                      checked={formData.smtpEnabled}
-                      onChange={handleChange}
-                      className="checkbox"
-                    />
-                  </label>
                 </div>
 
                 {/* VAPT Status Section */}
@@ -698,80 +705,153 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
 
 
           {/* Step 4: Business Details */}
+
+
+
+
           {currentStep === 4 && (
             <div className="space-y-6">
-              <h3 className="text-xl font-semibold text-gray-800">Business Details</h3>
+              <h3 className="text-xl font-semibold text-gray-800">Details</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Business Owner */}
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text font-medium">Business Owner</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="businessOwner"
-                    value={formData.businessOwner}
-                    onChange={handleChange}
-                    className="input input-bordered w-full"
-                  />
-                </div>
 
-                {/* Business Department Owner */}
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text font-medium">Business Department Owner</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="businessDeptOwner"
-                    value={formData.businessDeptOwner}
-                    onChange={handleChange}
-                    className="input input-bordered w-full"
-                  />
-                </div>
+                {(formData.manager === 'Business' || formData.manager === 'BOTH') && (
+                  <>
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text font-medium">Business Owner</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="businessOwner"
+                        value={formData.businessOwner}
+                        onChange={handleChange}
+                        className="input input-bordered w-full"
+                      />
+                    </div>
 
-                {/* Service Type */}
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text font-medium">Service Type</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="serviceType"
-                    value={formData.serviceType}
-                    onChange={handleChange}
-                    className="input input-bordered w-full"
-                  />
-                </div>
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text font-medium">Business Department Owner</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="businessDeptOwner"
+                        value={formData.businessDeptOwner}
+                        onChange={handleChange}
+                        className="input input-bordered w-full"
+                      />
+                    </div>
 
-                {/* Service Window */}
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text font-medium">Service Window</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="serviceWindow"
-                    value={formData.serviceWindow}
-                    onChange={handleChange}
-                    className="input input-bordered w-full"
-                  />
-                </div>
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text font-medium">Business Service Type</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="serviceType"
+                        value={formData.serviceType}
+                        onChange={handleChange}
+                        className="input input-bordered w-full"
+                      />
+                    </div>
 
-                {/* Business Severity */}
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text font-medium">Business Severity</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="businessSeverity"
-                    value={formData.businessSeverity}
-                    onChange={handleChange}
-                    className="input input-bordered w-full"
-                  />
-                </div>
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text font-medium">Business Service Window</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="serviceWindow"
+                        value={formData.serviceWindow}
+                        onChange={handleChange}
+                        className="input input-bordered w-full"
+                      />
+                    </div>
+
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text font-medium">Business Severity</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="businessSeverity"
+                        value={formData.businessSeverity}
+                        onChange={handleChange}
+                        className="input input-bordered w-full"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {(formData.manager === 'IT' || formData.manager === 'BOTH') && (
+                  <>
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text font-medium">IT Owner</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="itOwner"
+                        value={formData.itOwner}
+                        onChange={handleChange}
+                        className="input input-bordered w-full"
+                      />
+                    </div>
+
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text font-medium">IT Department Owner</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="itDeptOwner"
+                        value={formData.itDeptOwner}
+                        onChange={handleChange}
+                        className="input input-bordered w-full"
+                      />
+                    </div>
+
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text font-medium">IT Service Type</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="itServiceType"
+                        value={formData.itServiceType}
+                        onChange={handleChange}
+                        className="input input-bordered w-full"
+                      />
+                    </div>
+
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text font-medium">IT Service Window</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="itServiceWindow"
+                        value={formData.itServiceWindow}
+                        onChange={handleChange}
+                        className="input input-bordered w-full"
+                      />
+                    </div>
+
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text font-medium">IT Business Severity</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="itBusinessSeverity"
+                        value={formData.itBusinessSeverity}
+                        onChange={handleChange}
+                        className="input input-bordered w-full"
+                      />
+                    </div>
+                  </>
+                )}
 
                 {/* URLs Section - Modular Component */}
                 <div className="md:col-span-2">
@@ -782,6 +862,7 @@ export default function AddItem({ isOpen, onClose, fetchInventory }) {
               </div>
             </div>
           )}
+
 
 
           {/* Navigation Buttons */}

@@ -21,7 +21,7 @@ const CheckboxDropdown = ({
             <button
                 type="button"
                 className="w-full px-4 py-2 text-left border rounded-md bg-white shadow-sm"
-                onClick={onToggle} 
+                onClick={onToggle}
             >
                 {label} {selected.length > 0 ? `(${selected.length} selected)` : ''}
             </button>

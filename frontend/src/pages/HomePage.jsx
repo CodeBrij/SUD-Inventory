@@ -20,6 +20,8 @@ import { useAuthStore } from "../store/useAuthStore";
 import Sidebar from "./Sidebar";
 import SendEmailModal from "./SendEmailModal";
 import CheckboxDropdown from "./CheckboxDropdown";
+import SendEmailModal from "./SendEmailModal";
+import Sidebar from "./Sidebar";
 
 export default function InventoryManagement() {
   const navigate = useNavigate();
@@ -62,13 +64,18 @@ export default function InventoryManagement() {
     businessOwner: false,
     businessDeptOwner: false,
     businessSeverity: false,
+    serviceWindow: false,
+    itOwner: false,
+    itDeptOwner: false,
+    itBusinessSeverity: false,
+    itServiceWindow: false,
     technologyStack: false,
     availabilityRating: false,
     criticalityRating: false,
     goLiveDate: false,
     riskAssessmentDate: false,
     publish: false,
-    serviceWindow: false,
+
     applicationDescription: false,
     urls: {
       externalProd: true,
@@ -355,11 +362,18 @@ export default function InventoryManagement() {
         return itemValue === filterValue;
       };
 
+
       const matchesBooleanFilter = (filterValue, itemValue) => {
-        if (filterValue === undefined || filterValue === null) return true;
-        if (filterValue === "true") return itemValue === true;
-        if (filterValue === "false") return itemValue === false;
-        return true;
+        if (!filterValue || filterValue.length === 0) return true;
+        if (Array.isArray(filterValue)) {
+          return filterValue.some((value) => {
+            const actualFilterValue = value === "true";
+            return actualFilterValue === itemValue;
+          });
+        }
+
+        const actualFilterValue = filterValue === "true";
+        return actualFilterValue === itemValue;
       };
 
       //  VAPT filter
@@ -430,7 +444,7 @@ export default function InventoryManagement() {
     { name: 'publish', label: 'Publish', options: ['Internet', 'Non-Internet'] },
     { name: 'applicationType', label: 'Application Type', options: ['Business', 'Infra', 'Security'] },
     { name: 'developedBy', label: 'Developed By', options: ['In-House', 'OEM', 'Vendor'] },
-    { name: 'serviceType', label: 'Service Type', options: ['Core', 'Internal Use', 'Enabler'] },
+    // { name: 'serviceType', label: 'Service Type', options: ['Core', 'Internal Use', 'Enabler'] },
   ];
 
   const vaptFilterConfig = [
@@ -440,8 +454,8 @@ export default function InventoryManagement() {
 
   const securityFilter = [
     // Security Filters
-    { name: 'manager', label: 'Manager', options: ['Business', 'IT'], },
-    { name: 'endpointSecurity', label: 'Endpoint Security', options: ['HIPS', 'EDR'], },
+    { name: 'manager', label: 'Manager', options: ['Business', 'IT', 'BOTH'], },
+    { name: 'endpointSecurity', label: 'Endpoint Security', options: ['HIPS', 'EDR', 'NA'], },
     { name: 'accessControl', label: 'Access Control', options: ['PAM', 'NA'], },
     { name: 'socMonitoring', label: 'SOC Monitoring', options: ['true', 'false'], },
     { name: 'smtpEnabled', label: 'SMTP Enabled', options: ['true', 'false'], },
@@ -584,7 +598,7 @@ export default function InventoryManagement() {
         <div className="flex-1 overflow-auto">
           <table className="table w-full">
             <thead className="sticky top-0 bg-white">
-              <tr className="bg-gray-100 text-sm md:text-base">
+              <tr className="bg-gray-100 text-sm md:text-base divide-x divide-gray-300">
                 {/* Regular columns */}
                 {selectedColumns.appId && <th>App ID</th>}
                 {selectedColumns.applicationName && <th>App Name</th>}
@@ -604,13 +618,17 @@ export default function InventoryManagement() {
                 {selectedColumns.businessOwner && <th>Business Owner</th>}
                 {selectedColumns.businessDeptOwner && <th>Dept Owner</th>}
                 {selectedColumns.businessSeverity && <th>Business Severity</th>}
+                {selectedColumns.serviceWindow && <th>Service Window</th>}
+                {selectedColumns.itOwner && <th>IT Owner</th>}
+                {selectedColumns.itDeptOwner && <th>IT Dept Owner</th>}
+                {selectedColumns.itBusinessSeverity && <th>IT Business Severity</th>}
+                {selectedColumns.itServiceWindow && <th>IT Service Window</th>}
                 {selectedColumns.technologyStack && <th>Tech Stack</th>}
                 {selectedColumns.availabilityRating && <th>Availability</th>}
                 {selectedColumns.criticalityRating && <th>Criticality</th>}
                 {selectedColumns.goLiveDate && <th>Go Live Date</th>}
                 {selectedColumns.riskAssessmentDate && <th>Risk Assessment</th>}
                 {selectedColumns.publish && <th>Publish</th>}
-                {selectedColumns.serviceWindow && <th>Service Window</th>}
                 {selectedColumns.applicationDescription && <th>Description</th>}
 
                 {/* URL columns */}
@@ -623,9 +641,9 @@ export default function InventoryManagement() {
                 <th className="text-right">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-200">
               {filteredInventory.map((item) => (
-                <tr key={item._id} className="border-t text-sm md:text-base">
+                <tr key={item._id} className="text-sm md:text-base divide-y divide-x divide-gray-300 hover:bg-gray-50">
                   {/* Regular columns */}
                   {selectedColumns.appId && <td>{item.appId}</td>}
                   {selectedColumns.applicationName && <td>{item.applicationName}</td>}
@@ -657,11 +675,8 @@ export default function InventoryManagement() {
                           </div>
                         ))}
                       </div>
-
-
                     </td>
                   )}
-
                   {selectedColumns.endpointSecurity && <td>{item.endpointSecurity}</td>}
                   {selectedColumns.accessControl && <td>{item.accessControl}</td>}
                   {selectedColumns.socMonitoring && <td>{item.socMonitoring ? "Yes" : "No"}</td>}
@@ -669,6 +684,11 @@ export default function InventoryManagement() {
                   {selectedColumns.businessOwner && <td>{item.businessOwner}</td>}
                   {selectedColumns.businessDeptOwner && <td>{item.businessDeptOwner}</td>}
                   {selectedColumns.businessSeverity && <td>{item.businessSeverity}</td>}
+                  {selectedColumns.serviceWindow && <td>{item.serviceWindow || "N/A"}</td>}
+                  {selectedColumns.itOwner && <td>{item.itOwner}</td>}
+                  {selectedColumns.itDeptOwner && <td>{item.itDeptOwner}</td>}
+                  {selectedColumns.itBusinessSeverity && <td>{item.itBusinessSeverity}</td>}
+                  {selectedColumns.itServiceWindow && <td>{item.itServiceWindow || "N/A"}</td>}
                   {selectedColumns.technologyStack && <td>{item.technologyStack?.join(", ")}</td>}
                   {selectedColumns.availabilityRating && <td>{item.availabilityRating}</td>}
                   {selectedColumns.criticalityRating && <td>{item.criticalityRating}</td>}
@@ -679,7 +699,6 @@ export default function InventoryManagement() {
                     <td>{item.riskAssessmentDate ? new Date(item.riskAssessmentDate).toLocaleDateString() : "N/A"}</td>
                   )}
                   {selectedColumns.publish && <td>{item.publish}</td>}
-                  {selectedColumns.serviceWindow && <td>{item.serviceWindow || "N/A"}</td>}
                   {selectedColumns.applicationDescription && (
                     <td>{item.applicationDescription ? `${item.applicationDescription.substring(0, 50)}...` : "N/A"}</td>
                   )}
@@ -816,15 +835,17 @@ export default function InventoryManagement() {
       )}
 
       <SendEmailModal
-          isOpen={isSendEmailModalOpen}
-          receiverMail={receiverMail}
-          message={message}
-          isSendingMail={isSendingMail}
-          onClose={() => setIsSendEmailModalOpen(false)}
-          onChangeMail={e => setReceiverMail(e.target.value)}
-          onChangeMessage={e => setMessage(e.target.value)}
-          onSend={handleMailSend}
+
+        isOpen={isSendEmailModalOpen}
+        receiverMail={receiverMail}
+        message={message}
+        isSendingMail={isSendingMail}
+        onClose={() => setIsSendEmailModalOpen(false)}
+        onChangeMail={e => setReceiverMail(e.target.value)}
+        onChangeMessage={e => setMessage(e.target.value)}
+        onSend={handleMailSend}
         />
+
 
 
     </div>
