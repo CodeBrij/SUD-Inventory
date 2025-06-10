@@ -419,79 +419,151 @@ export default function ViewEditItem({ itemId, isOpen, onClose, fetchInventory }
 
             {/* Business Details */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold border-b pb-2">Business Details</h3>
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Business Owner</span>
-                </label>
-                <input
-                  type="text"
-                  name="businessOwner"
-                  value={formData.businessOwner || ''}
-                  onChange={handleChange}
-                  className="input input-bordered w-full"
-                />
-              </div>
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Business Department Owner</span>
-                </label>
-                <input
-                  type="text"
-                  name="businessDeptOwner"
-                  value={formData.businessDeptOwner || ''}
-                  onChange={handleChange}
-                  className="input input-bordered w-full"
-                />
-              </div>
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Service Type</span>
-                </label>
-                <input
-                  type="text"
-                  name="serviceType"
-                  value={formData.serviceType || ''}
-                  onChange={handleChange}
-                  className="input input-bordered w-full"
-                />
-              </div>
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Service Window</span>
-                </label>
-                <input
-                  type="text"
-                  name="serviceWindow"
-                  value={formData.serviceWindow || ''}
-                  onChange={handleChange}
-                  className="input input-bordered w-full"
-                />
-              </div>
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Business Severity</span>
-                </label>
-                <input
-                  type="text"
-                  name="businessSeverity"
-                  value={formData.businessSeverity || ''}
-                  onChange={handleChange}
-                  className="input input-bordered w-full"
-                />
-              </div>
-              {/* <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Technology Stack</span>
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {formData.technologyStack?.map((tech, index) => (
-                    <span key={index} className="badge badge-primary">
-                      {tech}
-                    </span>
-                  ))}
+              {/* Business Details - show only if manager is Business or BOTH */}
+              {(formData.manager === "Business" || formData.manager === "BOTH") && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold border-b pb-2">Business Details</h3>
+
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">Business Owner</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="businessOwner"
+                      value={formData.businessOwner || ''}
+                      onChange={handleChange}
+                      className="input input-bordered w-full"
+                    />
+                  </div>
+
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">Business Department Owner</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="businessDeptOwner"
+                      value={formData.businessDeptOwner || ''}
+                      onChange={handleChange}
+                      className="input input-bordered w-full"
+                    />
+                  </div>
+
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">Service Type</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="serviceType"
+                      value={formData.serviceType || ''}
+                      onChange={handleChange}
+                      className="input input-bordered w-full"
+                    />
+                  </div>
+
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">Service Window</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="serviceWindow"
+                      value={formData.serviceWindow || ''}
+                      onChange={handleChange}
+                      className="input input-bordered w-full"
+                    />
+                  </div>
+
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">Business Severity</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="businessSeverity"
+                      value={formData.businessSeverity || ''}
+                      onChange={handleChange}
+                      className="input input-bordered w-full"
+                    />
+                  </div>
                 </div>
-              </div> */}
+              )}
+
+
+              {/* IT Details - show only if manager is IT or BOTH */}
+              {(formData.manager === "IT" || formData.manager === "BOTH") && (
+                <div className="space-y-4 mt-8">
+                  <h3 className="text-lg font-semibold border-b pb-2">IT Details</h3>
+
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">IT Owner</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="itOwner"
+                      value={formData.itOwner || ''}
+                      onChange={handleChange}
+                      className="input input-bordered w-full"
+                    />
+                  </div>
+
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">IT Department Owner</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="itDeptOwner"
+                      value={formData.itDeptOwner || ''}
+                      onChange={handleChange}
+                      className="input input-bordered w-full"
+                    />
+                  </div>
+
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">IT Service Type</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="itServiceType"
+                      value={formData.itServiceType || ''}
+                      onChange={handleChange}
+                      className="input input-bordered w-full"
+                    />
+                  </div>
+
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">IT Service Window</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="itServiceWindow"
+                      value={formData.itServiceWindow || ''}
+                      onChange={handleChange}
+                      className="input input-bordered w-full"
+                    />
+                  </div>
+
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">IT Business Severity</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="itBusinessSeverity"
+                      value={formData.itBusinessSeverity || ''}
+                      onChange={handleChange}
+                      className="input input-bordered w-full"
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="form-control">
                 <label className="label">
                   <span className="label-text">Technology Stack</span>
