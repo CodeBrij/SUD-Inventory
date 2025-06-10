@@ -11,6 +11,7 @@ import InviteUser from "./routes/inviteUser.js";
 import CompleteSetup from "./routes/CompleteSetup.js";
 import jwtAuth from "./middleware/auth.js";
 const app = express();
+import path from "path";
 
 // CORS configuration for frontend
 app.use(cors({
@@ -19,6 +20,8 @@ app.use(cors({
     ], 
     credentials: true, // Allow credentials (cookies)
 }))
+
+const __dirname = path.resolve();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -29,6 +32,14 @@ app.use("/inventory",InventoryRouter);
 app.use("/generate-report", GenerateExcelReportRouter);
 app.use("/send", InviteUser);
 app.use("/api/invite", CompleteSetup);
+
+if(process.env.NODE_ENV === "production"){
+    app.use(express.static(path.join(__dirname, "../frontend/dist")));
+
+    app.get("*", (req,res) => {
+        res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
+    })
+}
 
 connectDB();
 
