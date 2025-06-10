@@ -128,7 +128,7 @@ export default function ViewEditItem({ itemId, isOpen, onClose, fetchInventory }
 
   if (!isOpen) return null;
 
-  if (isLoading || !formData) {
+   if (isLoading || !formData) {
     return (
       <div className="fixed inset-0 bg-white/30 backdrop-blur-s flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl p-6">
