@@ -130,7 +130,7 @@ export default function ViewEditItem({ itemId, isOpen, onClose, fetchInventory }
 
   if (isLoading || !formData) {
     return (
-      <div className="fixed inset-0 bg-base-100 bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="fixed inset-0 bg-white/30 backdrop-blur-s flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl p-6">
           <div className="flex justify-center items-center h-64">
             <span className="loading loading-spinner loading-lg"></span>
@@ -141,7 +141,7 @@ export default function ViewEditItem({ itemId, isOpen, onClose, fetchInventory }
   }
 
   return (
-    <div className="fixed inset-0 bg-base-100 bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
