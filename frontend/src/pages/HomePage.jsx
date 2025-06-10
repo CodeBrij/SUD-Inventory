@@ -17,8 +17,6 @@ import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import * as XLSX from 'xlsx';
 import { useAuthStore } from "../store/useAuthStore";
-import Sidebar from "./Sidebar";
-import SendEmailModal from "./SendEmailModal";
 import CheckboxDropdown from "./CheckboxDropdown";
 import SendEmailModal from "./SendEmailModal";
 import Sidebar from "./Sidebar";
